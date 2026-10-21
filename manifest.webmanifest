@@ -1,0 +1,13 @@
+{
+  "name": "Paktor Lah — Singapore date planner",
+  "short_name": "Paktor Lah",
+  "description": "Plan a Singapore date in under two minutes: an activity, a meal nearby and an invitation to send.",
+  "start_url": "./index.html#/",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffaf4",
+  "theme_color": "#c7354a",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en-SG">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Paktor Lah — Singapore date planner</title>
+  <meta name="description" content="Turn your preferences into a ready-to-go Singapore date plan: an activity, a meal nearby and an invitation to send, in under two minutes.">
+  <meta name="theme-color" content="#c7354a">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
+  <link rel="stylesheet" href="styles.css?v=10">
+</head>
+<body>
+  <a class="skip" href="#app">Skip to content</a>
+  <header class="topbar">
+    <a href="#/" class="logo" aria-label="Paktor Lah home"><span aria-hidden="true">💞</span> Paktor <em>Lah</em></a>
+    <nav class="mainnav" aria-label="Main">
+      <a href="#/calendar"><span aria-hidden="true">📅</span> What's on</a>
+      <a href="#/memories"><span aria-hidden="true">📸</span> Memories</a>
+      <a href="#/plans">My plans</a>
+    </nav>
+  </header>
+  <main id="app" tabindex="-1"></main>
+  <footer class="foot">
+    <p>Expert tips are general relationship advice, not counselling. If you need support, reach out to <a href="https://www.mindline.sg/" target="_blank" rel="noopener">mindline.sg</a> or call SOS at 1767 (24 hours).</p>
+    <p>Listings credit their sources and link to official pages. Paktor Lah doesn't sell tickets. <a href="admin.html">Editor console</a></p>
+  </footer>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="js/data.js?v=10"></script>
+  <script src="js/store.js?v=10"></script>
+  <script src="js/engine.js?v=10"></script>
+  <script src="js/invite.js?v=10"></script>
+  <script src="js/events-eventbrite.js?v=10"></script>
+  <script src="js/calendar.js?v=10"></script>
+  <script src="js/memories.js?v=10"></script>
+  <script src="js/app.js?v=10"></script>
+</body>
+</html>

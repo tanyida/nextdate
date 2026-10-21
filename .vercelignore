@@ -1,0 +1,5 @@
+# Local tooling: not part of the website
+.claude
+serve.ps1
+ingest-eventbrite.ps1
+README.md
