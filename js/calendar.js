@@ -81,6 +81,7 @@ PL.calendar = (function () {
         <p class="hint">Upcoming events that match your date preferences.</p>
         <div class="summary cal-summary"><div class="pills">${summary(p)}</div><a href="#/" class="edit" data-calact="edit">Edit</a></div>
       </header>`}
+      <div class="cal-layout"><div class="cal-side">
       <div class="seg seg-sm" role="radiogroup" aria-label="Which events">
         <button type="button" role="radio" aria-checked="${!f.all}" data-calact="mine">For my preferences</button>
         <button type="button" role="radio" aria-checked="${f.all}" data-calact="all">All events</button>
@@ -97,10 +98,15 @@ PL.calendar = (function () {
         </div>
         <p class="cal-foot">${total} event-day${total === 1 ? '' : 's'} this month · <span class="cal-key"><i class="k-chosen"></i> your date</span></p>
       </div>
+      </div><div class="cal-main">
 
       <h2 class="section-h">${esc(U.fmtDate(sel, { weekday: 'long', day: 'numeric', month: 'long' }))} <span class="hint">${list.length} event${list.length === 1 ? '' : 's'}</span></h2>
-      ${list.length ? `<div class="cal-list">${list.map((a) => eventHTML(a, sel)).join('')}</div>`
+      ${list.length ? (() => {
+        const pg = U.paginate(list, S.sget('calPage', 1), 8, 'data-calact="page"', 'Event pages');
+        return `<div class="cal-list">${pg.items.map((a) => eventHTML(a, sel)).join('')}</div>${pg.html}`;
+      })()
         : `<div class="empty"><p>No events ${f.all ? '' : 'matching your preferences '}on this day.</p>${f.all ? '' : '<button type="button" class="btn tiny" data-calact="all">Show all events</button>'}</div>`}
+      </div></div>
       <p class="fineprint">Events from Eventbrite${fetched ? ' (updated ' + esc(fetched) + ')' : ''} and Next Date editors. Event details, photos and ticket prices are on each organiser's page.</p>`;
     PL.photos.hydrate(target);
   }
@@ -145,15 +151,16 @@ PL.calendar = (function () {
     const act = e.target.closest('[data-calact]');
     const day = e.target.closest('.cal-cell[data-day]');
     if (!act && !day) return;
-    if (day) { S.sset('calDay', day.dataset.day); render(); return; }
+    if (day) { S.sset('calDay', day.dataset.day); S.sset('calPage', 1); render(); return; }
     const today = U.sgToday(), p = PL.app.state.prefs;
     const month = S.sget('calMonth', null) || (p.date >= today ? p.date : today).slice(0, 7);
-    const shift = (n) => { const [y, m] = month.split('-').map(Number); const d = new Date(Date.UTC(y, m - 1 + n, 1)); S.sset('calMonth', d.toISOString().slice(0, 7)); S.sset('calDay', null); render(); };
+    const shift = (n) => { const [y, m] = month.split('-').map(Number); const d = new Date(Date.UTC(y, m - 1 + n, 1)); S.sset('calMonth', d.toISOString().slice(0, 7)); S.sset('calDay', null); S.sset('calPage', 1); render(); };
     switch (act.dataset.calact) {
+      case 'page': S.sset('calPage', Number(act.dataset.p)); render(); { const h = target.querySelector('.cal-list'); if (h) h.previousElementSibling.scrollIntoView(); } break;
       case 'prev': shift(-1); break;
       case 'next': shift(1); break;
-      case 'mine': S.sset('calAll', false); render(); break;
-      case 'all': S.sset('calAll', true); render(); break;
+      case 'mine': S.sset('calAll', false); S.sset('calPage', 1); render(); break;
+      case 'all': S.sset('calAll', true); S.sset('calPage', 1); render(); break;
       case 'set-prefs': S.sset('afterPrefs', '#/events'); location.hash = '#/'; break;
       case 'edit': S.sset('afterPrefs', '#/events'); break; // the link itself navigates to #/
       case 'save': { const id = act.dataset.id; const on = S.toggleIn('saved', id, !S.list('saved').includes(id)); PL.app.toast(on ? 'Saved for later ♥' : 'Removed from saved'); render(); break; }

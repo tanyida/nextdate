@@ -1,7 +1,8 @@
 # Next Date: Eventbrite ingestion (PRD "Ingestion pipeline", steps 1–5).
 # Reads the public "this weekend in Singapore" listing pages (allowed by eventbrite.sg/robots.txt),
-# keeps FACTS ONLY (name, dates, times, venue, location, category, link), writes our own one-line
-# description, and saves js/events-eventbrite.js for the app. No Eventbrite text or images are stored.
+# keeps facts (name, dates, times, venue, location, category, link) plus a link to the organiser's event
+# image (shown credited), writes our own one-line description, and saves js/events-eventbrite.js.
+# No Eventbrite description text is stored. Get Eventbrite's permission before a public launch.
 #
 # Usage:  powershell -ExecutionPolicy Bypass -File ingest-eventbrite.ps1 [-Pages 5] [-DelaySeconds 3]
 param(
@@ -114,7 +115,10 @@ for ($page = 1; $page -le $Pages; $page++) {
       official_url = $r.url; booking_url = $r.url
       source_name = 'Eventbrite'; source_url = $pageUrl; source_category = $ebCat
       sponsored = $false; status = 'live'; auto_imported = $true; pinned = $false; last_verified_at = $today
-      photo = ''; photo_kind = ''; image_url = ''
+      # The organiser's event image, shown credited with a link back to the listing.
+      photo = ''; photo_kind = ''
+      image_url = $(if ($r.image -and $r.image.image_sizes) { [string]$r.image.image_sizes.medium } else { '' })
+      image_credit = 'Event organiser via Eventbrite'; image_page = $r.url
     }
   }
   if ($page -ge [int]$data.page_count) { break }

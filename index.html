@@ -12,7 +12,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
-  <link rel="stylesheet" href="styles.css?v=11">
+  <link rel="stylesheet" href="styles.css?v=12">
 </head>
 <body>
   <a class="skip" href="#app">Skip to content</a>
@@ -35,16 +35,17 @@
     <p>Listings credit their sources and link to official pages. Next Date doesn't sell tickets. <a href="admin.html">Editor console</a></p>
   </footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="js/data.js?v=11"></script>
-  <script src="js/store.js?v=11"></script>
-  <script src="js/engine.js?v=11"></script>
-  <script src="js/invite.js?v=11"></script>
-  <script src="js/events-eventbrite.js?v=11"></script>
-  <script src="js/calendar.js?v=11"></script>
-  <script src="js/gifts-data.js?v=11"></script>
-  <script src="js/gifts.js?v=11"></script>
-  <script src="js/memories.js?v=11"></script>
-  <script src="js/app.js?v=11"></script>
+  <script src="js/data.js?v=12"></script>
+  <script src="js/photos-official.js?v=12"></script>
+  <script src="js/store.js?v=12"></script>
+  <script src="js/engine.js?v=12"></script>
+  <script src="js/invite.js?v=12"></script>
+  <script src="js/events-eventbrite.js?v=12"></script>
+  <script src="js/calendar.js?v=12"></script>
+  <script src="js/gifts-data.js?v=12"></script>
+  <script src="js/gifts.js?v=12"></script>
+  <script src="js/memories.js?v=12"></script>
+  <script src="js/app.js?v=12"></script>
   <script>
     // If the app scripts didn't load (e.g. the js/ folder is missing on the server), say so instead of a blank page.
     (function () {
@@ -53,7 +54,7 @@
         var el = document.getElementById('app');
         el.innerHTML = '<div class="boot-msg"><h1>Sorry, the app didn’t load</h1>' +
           '<p>The page couldn’t load its script files from the <code>js/</code> folder. ' +
-          'If you just deployed, check that the <code>js</code> folder (12 files) is in your repository next to <code>index.html</code>.</p>' +
+          'If you just deployed, check that the <code>js</code> folder (13 files) is in your repository next to <code>index.html</code>.</p>' +
           '<p><a href="js/app.js">Test: open js/app.js</a></p></div>';
       }
       if (document.readyState === 'complete') check(); else window.addEventListener('load', check);

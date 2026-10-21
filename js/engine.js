@@ -218,7 +218,8 @@ PL.engine = (function () {
     }
     let picked = diversify(pool, limit);
     // "Happening now" (events on the chosen date) first, then evergreen, each by score.
-    picked = picked.filter((i) => i.activity.type === 'event').concat(picked.filter((i) => i.activity.type !== 'event'));
+    // Short lists: events first. Long paged lists keep rank order (the UI puts events first on each page).
+    if (limit <= 12) picked = picked.filter((i) => i.activity.type === 'event').concat(picked.filter((i) => i.activity.type !== 'event'));
 
     const items = picked.map((it) => {
       const aCost = activityCost(it.activity, p);

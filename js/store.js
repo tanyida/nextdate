@@ -76,6 +76,28 @@ PL.util = {
     }
     return JSON.parse(new TextDecoder().decode(raw));
   },
+  // Page through a list. Returns { items, page, pages, html } — html is the "‹ 1 2 3 ›" bar.
+  // attr is the data attribute the page buttons carry, e.g. 'data-action="page"'.
+  paginate(list, page, size, attr, label) {
+    const pages = Math.max(1, Math.ceil(list.length / size));
+    page = Math.min(Math.max(1, page || 1), pages);
+    const from = (page - 1) * size, items = list.slice(from, from + size);
+    if (pages === 1) return { items, page, pages, html: '' };
+    const btn = (p, text, extra) => `<button type="button" class="pg-btn${p === page ? ' on' : ''}" ${attr} data-p="${p}" ${extra || ''}${p === page ? ' aria-current="page"' : ''}>${text}</button>`;
+    // Compact page list: first, last, current ±1, with gaps.
+    const nums = [];
+    for (let p = 1; p <= pages; p++) {
+      if (p === 1 || p === pages || Math.abs(p - page) <= 1) nums.push(btn(p, p, `aria-label="Page ${p}"`));
+      else if (nums[nums.length - 1] !== '…') nums.push('…');
+    }
+    const html = `<nav class="pager" aria-label="${PL.util.esc(label || 'Pages')}">
+      ${btn(Math.max(1, page - 1), '‹ Prev', page === 1 ? 'disabled' : '')}
+      ${nums.map((n) => (n === '…' ? '<span class="pg-gap">…</span>' : n)).join('')}
+      ${btn(Math.min(pages, page + 1), 'Next ›', page === pages ? 'disabled' : '')}
+      <span class="pg-info">${from + 1}–${from + items.length} of ${list.length}</span>
+    </nav>`;
+    return { items, page, pages, html };
+  },
   download(filename, blobOrText, type) {
     const blob = blobOrText instanceof Blob ? blobOrText : new Blob([blobOrText], { type: type || 'text/plain' });
     const a = document.createElement('a');
@@ -118,18 +140,28 @@ PL.photos = (function () {
     const img = document.createElement('img');
     // hydrate() already defers off-screen photos, so load immediately once we get here.
     img.alt = fig.dataset.alt || ''; img.decoding = 'async'; img.loading = 'eager';
+    img.referrerPolicy = 'no-referrer'; // some sites block images embedded from other domains
     const w = Number(fig.dataset.w || 640);
-    const show = (src, fallback) => {
+    const show = (src, fallback, onFail) => {
       img.onload = () => fig.classList.add('loaded');
-      img.onerror = () => { if (fallback && img.src !== fallback) img.src = fallback; else fig.classList.add('failed'); };
-      img.src = src; fig.prepend(img);
+      img.onerror = () => { if (fallback && img.src !== fallback) img.src = fallback; else if (onFail) onFail(); else fig.classList.add('failed'); };
+      img.src = src; if (!img.parentNode) fig.prepend(img);
     };
-    if (fig.dataset.src) { show(fig.dataset.src); return; }
-    get(fig.dataset.photo).then((p) => {
+    const fromWiki = () => get(fig.dataset.photo).then((p) => {
       if (!p.thumb) { fig.classList.add('failed'); return; }
       fig.dataset.full = sized(p.thumb, 1280); fig.dataset.fullAlt = p.full; fig.dataset.page = p.page; fig.dataset.label = p.label;
       show(sized(p.thumb, w), p.thumb);
     });
+    if (fig.dataset.src) {
+      // Official photo first; if the site blocks it, fall back to the licensed Wikipedia photo.
+      show(fig.dataset.src, null, () => {
+        delete fig.dataset.src; delete fig.dataset.credit; fig.dataset.kind = fig.dataset.kind || '';
+        const tag = fig.querySelector('.ph-tag'); if (tag) tag.remove();
+        if (fig.dataset.photo) fromWiki(); else fig.classList.add('failed');
+      });
+      return;
+    }
+    fromWiki();
   }
 
   let io = null;
@@ -157,10 +189,13 @@ PL.photos = (function () {
     const note = kind === 'dish' ? 'Illustrative photo of a typical dish, not taken at this restaurant.'
       : kind === 'idea' ? 'Illustrative photo of the activity, not taken at this venue.' : '';
     const src = fig.dataset.full || (fig.querySelector('img') || {}).src;
+    const official = !!fig.dataset.src && fig.dataset.credit;
+    const credit = official
+      ? `<br><span>Photo: ${esc(fig.dataset.credit)}${fig.dataset.srcPage ? ` · <a href="${esc(fig.dataset.srcPage)}" target="_blank" rel="noopener">view on their website ↗</a>` : ''}</span>`
+      : fig.dataset.page ? `<br><span>Photo: <a href="${esc(fig.dataset.page)}" target="_blank" rel="noopener">Wikipedia / Wikimedia Commons (${esc(fig.dataset.label)}) ↗</a>. See the file page for author &amp; licence.</span>` : '';
     dlg.innerHTML = `<figure>
-        <img src="${esc(src)}" alt="${esc(fig.dataset.alt || '')}">
-        <figcaption><strong>${esc(fig.dataset.title || fig.dataset.alt || '')}</strong>${note ? '<br><span>' + note + '</span>' : ''}
-        ${fig.dataset.page ? `<br><span>Photo: <a href="${esc(fig.dataset.page)}" target="_blank" rel="noopener">Wikipedia / Wikimedia Commons (${esc(fig.dataset.label)}) ↗</a>. See the file page for author &amp; licence.</span>` : ''}</figcaption>
+        <img src="${esc(src)}" alt="${esc(fig.dataset.alt || '')}" referrerpolicy="no-referrer">
+        <figcaption><strong>${esc(fig.dataset.title || fig.dataset.alt || '')}</strong>${!official && note ? '<br><span>' + note + '</span>' : ''}${credit}</figcaption>
       </figure>
       <button type="button" class="btn lb-close" data-close aria-label="Close photo">✕</button>`;
     const big = dlg.querySelector('img'), alt = fig.dataset.fullAlt;
@@ -170,6 +205,12 @@ PL.photos = (function () {
 
   return { get, hydrate, open };
 })();
+
+PL.applyOfficialPhoto = function (x) {
+  const o = PL.OFFICIAL_PHOTOS && PL.OFFICIAL_PHOTOS[x.id];
+  if (o && !x.image_url) { x.image_url = o.src; x.image_credit = o.credit; x.image_page = o.page; }
+  return x;
+};
 
 PL.store = {
   _get(area, k, d) {
@@ -191,6 +232,8 @@ PL.store = {
       return x;
     });
     let activities = saved && saved.activities ? fill(saved.activities, PL.SEED_ACTIVITIES, ['photo', 'photo_kind', 'image_url', 'booking_url']) : PL.SEED_ACTIVITIES;
+    // Official venue photos (js/photos-official.js), unless an editor set their own image.
+    if (PL.OFFICIAL_PHOTOS) activities.forEach((a) => PL.applyOfficialPhoto(a));
     // Imported Eventbrite events (js/events-eventbrite.js) join the pool unless an editor already has them.
     if (PL.EVENTBRITE_EVENTS && PL.EVENTBRITE_EVENTS.length) {
       const have = new Set(activities.map((a) => a.id));

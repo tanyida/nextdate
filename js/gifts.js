@@ -35,16 +35,16 @@ PL.routes = PL.routes || {};
     return `<article class="gift" id="gift-${g.id}">
       <div class="gift-media cat-${g.kind === 'experience' ? 'events' : g.kind === 'diy' ? 'chill' : 'food'}">
         <span aria-hidden="true">${t.emoji}</span>
-        ${PL.app.photoHTML({ name: g.name, photo: g.photo, photo_kind: g.photo_kind, image_url: g.image_url || '' }, { w: 500, cls: 'ph-card' })}
+        ${PL.app.photoHTML(PL.applyOfficialPhoto({ id: g.id, name: g.name, photo: g.photo, photo_kind: g.photo_kind, image_url: g.image_url || '', image_credit: g.image_credit, image_page: g.image_page }), { w: 500, cls: 'ph-card' })}
         ${g.sponsored ? '<span class="badge badge-sp">Sponsored</span>' : ''}
       </div>
       <div class="gift-body">
         <span class="tag">${esc(t.label)} · ${esc(PL.GIFT_BANDS[g.band])}</span>
         <h3>${esc(g.name)}</h3>
         <p class="gift-supplier">${g.kind === 'shop' || g.url ? 'by ' : ''}<strong>${esc(g.supplier)}</strong>${g.kind === 'shop' ? ' · Singapore' : ''}</p>
-        <p class="desc">${esc(g.desc)}</p>
-        <blockquote class="tip"><span class="tip-h">💬 Why it works</span> ${esc(g.why)}</blockquote>
-        <p class="gift-love">❤️ Great for: ${esc(loves)}</p>
+        <p class="desc clamp2" title="${esc(g.desc)}">${esc(g.desc)}</p>
+        <p class="tip-mini clamp2" title="${esc(g.why)}"><strong>💬 Why it works:</strong> ${esc(g.why)}</p>
+        <p class="gift-love">❤️ ${esc(loves)}</p>
         <div class="actions">
           ${action}${shop}
           <button type="button" class="btn tiny icon ${saved ? 'on' : ''}" data-gift-act="save" data-id="${g.id}" aria-pressed="${saved}" aria-label="Save gift idea">${saved ? '♥' : '♡'}</button>
@@ -57,6 +57,7 @@ PL.routes = PL.routes || {};
     const { $app } = PL.app;
     const f = filters();
     const list = PL.GIFTS.filter((g) => matches(g, f));
+    const pg = U.paginate(list, S.sget('giftPage', 1), 12, 'data-gift-act="page"', 'Gift pages');
     const active = f.occasion !== 'any' || f.band !== 'any' || f.types.length || f.love !== 'any';
     $app.innerHTML = `
     <section class="screen gifts">
@@ -77,11 +78,11 @@ PL.routes = PL.routes || {};
       </details>
 
       <h2 class="section-h">${list.length} gift idea${list.length === 1 ? '' : 's'} ${active ? '<button type="button" class="linkish" data-gift-act="clear">Clear filters</button>' : ''}</h2>
-      ${list.length ? `<div class="gift-grid">${list.map(cardHTML).join('')}</div>`
+      ${list.length ? `<div class="gift-grid">${pg.items.map(cardHTML).join('')}</div>${pg.html}`
         : '<div class="empty"><p>No ideas match all those filters. Try a different budget or occasion.</p><button type="button" class="btn tiny" data-gift-act="clear">Clear filters</button></div>'}
 
       <blockquote class="tip gift-expert"><span class="tip-h">💬 Expert note</span> The best gifts show you've been paying attention. A small, specific gift tied to something they said ("you mentioned…") usually means more than an expensive generic one.</blockquote>
-      <p class="fineprint">Brands listed are independent Singapore businesses. Next Date isn't paid by them, and any paid placement will be labelled "Sponsored". Check prices, stock and delivery on each brand's site. Photos are illustrative (Wikipedia / Wikimedia Commons), not the brands' products.</p>
+      <p class="fineprint">Brands listed are independent Singapore businesses. Next Date isn't paid by them, and any paid placement will be labelled "Sponsored". Check prices, stock and delivery on each brand's site. Photos marked 📷 come from the brand's own website and link back to it; others are illustrative (Wikipedia / Wikimedia Commons), not the brand's products.</p>
     </section>`;
     PL.photos.hydrate($app);
     document.getElementById('gift-more').addEventListener('toggle', (e) => S.sset('giftMore', e.target.open));
@@ -97,10 +98,11 @@ PL.routes = PL.routes || {};
       const g = chip.dataset.giftF, v = chip.dataset.v;
       if (g === 'types') { const i = f.types.indexOf(v); if (i >= 0) f.types.splice(i, 1); else f.types.push(v); }
       else f[g] = v;
-      S.sset('giftFilters', f); render(); return;
+      S.sset('giftFilters', f); S.sset('giftPage', 1); render(); return;
     }
     switch (act.dataset.giftAct) {
-      case 'clear': S.sset('giftFilters', null); render(); break;
+      case 'clear': S.sset('giftFilters', null); S.sset('giftPage', 1); render(); break;
+      case 'page': S.sset('giftPage', Number(act.dataset.p)); render(); document.querySelector('.gifts .section-h').scrollIntoView(); break;
       case 'save': {
         const id = act.dataset.id, on = S.toggleIn('savedGifts', id, !S.list('savedGifts').includes(id));
         PL.app.toast(on ? 'Gift idea saved. Find it in My plans ♥' : 'Removed from saved gifts');

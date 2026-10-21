@@ -45,6 +45,25 @@ sw.js, manifest.webmanifest, icon.svg  PWA (installable, offline shell)
 serve.ps1                   zero-install local server
 ```
 
+## Photos from official websites
+
+- **Gifts and venues:** `fetch-photos.ps1` collects each brand's or venue's own sharing photo (its `og:image`) from the official site and saves it to `js/photos-official.js`. Logos are skipped. For Shopify shops it uses a matching product photo from the shop's public product feed. Re-run it any time:
+
+  ```powershell
+  powershell -ExecutionPolicy Bypass -File fetch-photos.ps1
+  ```
+- **Events:** `ingest-eventbrite.ps1` links each Eventbrite event to the organiser's own event image.
+- **How they're shown:** these photos carry a **📷 credit** and a "view on their website" link in the photo viewer. If a site blocks embedding, the app automatically falls back to the freely licensed Wikimedia photo.
+- **Where real photos aren't available:** brands whose sites block automated requests or only publish a logo, generic placeholder venues and restaurants, and activity "ideas" with no single supplier (pottery class, massage…). These keep a freely licensed photo labelled "Illustrative" or "Typical dish". Editors can paste any photo URL into `image_url` in the editor console.
+- **⚠️ Permission:** these images belong to the brands, venues and organisers. Showing them credited and linked works the way link previews do, but get each source's permission (or a partnership) before a public launch. This overrides the PRD's original "never republish source images" rule at the product owner's request.
+
+## Layout and paging
+
+- **Width:** list pages (date ideas, gift ideas, latest events) use up to 1,200 px. Forms stay a comfortable reading width.
+- **Cards:** compact. Two-line descriptions and tips, facts as small chips, and the meal options fold into one line ("🍽️ Dinner nearby: … · 4 options") that expands.
+- **Grids:** 1 column on phones, 2 on tablets, and 3 per row for date ideas or 4 for gifts on desktop.
+- **Pages:** date ideas show 9 per page (all matching ideas, ranked), gifts 12 per page, and events 8 per day page. On desktop, Latest events puts the calendar beside the day's list.
+
 ## Navigation
 
 The top menu is **Plan a date · Latest events · Gift ideas · Memories · My plans**: plain text links, with the current page in bold. On phones it becomes a row that scrolls sideways under the logo.

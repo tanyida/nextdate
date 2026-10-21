@@ -179,6 +179,7 @@
     }
     state.shown = []; state.result = null;
     S.sset('prefsDone', true);
+    S.sset('seenPages', []); S.sset('resultsPage', 1); S.sset('resultsTab', 'ideas');
     S.sset('calDay', null); S.sset('calMonth', null); // the events calendar opens on the chosen date
     S.track('prefs_submitted');
     if (surprise) {
@@ -213,23 +214,28 @@
     return bits.map((b) => `<span class="pill">${esc(b)}</span>`).join('');
   }
 
-  function runRecommend(excludeShown) {
-    const exclude = excludeShown ? state.shown : [];
-    let r = E.recommend(state.prefs, { exclude });
-    if (excludeShown && r.items.length < 3) { state.shown = []; r = E.recommend(state.prefs, {}); toast('That\'s everything for these filters. Starting over from the top.'); }
-    r.items.forEach((it) => { if (!state.shown.includes(it.activity.id)) state.shown.push(it.activity.id); S.bumpView(it.activity.id); });
-    state.result = r; persist();
-    S.track('cards_shown', r.items.length);
+  const PAGE_SIZE = 9;
+  function runRecommend() {
+    // Every matching idea, ranked (diversity rules apply to the top), shown 9 per page.
+    const r = E.recommend(state.prefs, { limit: 200 });
+    state.result = r; S.sset('resultsPage', 1); persist();
     return r;
   }
 
   function viewResults() {
     const p = state.prefs;
     if (!p.categories.length && !state.plan.length) { location.hash = '#/'; return; }
-    const r = state.result || runRecommend(false);
-    const events = r.items.filter((i) => i.activity.type === 'event');
-    const ever = r.items.filter((i) => i.activity.type !== 'event');
+    const r = state.result || runRecommend();
+    // Rank order across pages; on each page, "Happening now" events come first.
+    const pg = U.paginate(r.items, S.sget('resultsPage', 1), PAGE_SIZE, 'data-action="results-page"', 'Result pages');
+    const events = pg.items.filter((i) => i.activity.type === 'event');
+    const ever = pg.items.filter((i) => i.activity.type !== 'event');
     const card = (it) => cardHTML(it);
+    const seen = S.sget('seenPages', []);
+    if (!seen.includes(pg.page)) { // count impressions & novelty once per page view
+      pg.items.forEach((it) => S.bumpView(it.activity.id)); S.track('cards_shown', pg.items.length);
+      S.sset('seenPages', seen.concat(pg.page));
+    }
     const tab = S.sget('resultsTab', 'ideas');
     const tabs = `<div class="seg" role="tablist" aria-label="Results view">
         <button type="button" role="tab" aria-selected="${tab === 'ideas'}" data-action="results-tab" data-tab="ideas">💡 Date ideas</button>
@@ -252,11 +258,12 @@
       ${summary}
       ${tabs}
       ${r.items.length < 3 ? emptyState(r) : ''}
-      ${events.length ? `<h2 class="section-h"><span class="live-dot" aria-hidden="true"></span> Happening on ${esc(U.fmtDate(p.date))}</h2>${events.map(card).join('')}` : ''}
-      ${ever.length ? `<h2 class="section-h">${events.length ? 'Evergreen ideas' : 'Date ideas for you'}</h2>${ever.map(card).join('')}` : ''}
-      ${r.items.length ? `<button type="button" class="btn ghost wide" data-action="shuffle">🔀 Shuffle for more ideas</button>` : ''}
+      ${pg.pages > 1 ? `<p class="hint results-count">${r.items.length} date ideas · page ${pg.page} of ${pg.pages}</p>` : ''}
+      ${events.length ? `<h2 class="section-h"><span class="live-dot" aria-hidden="true"></span> Happening on ${esc(U.fmtDate(p.date))}</h2><div class="card-grid">${events.map(card).join('')}</div>` : ''}
+      ${ever.length ? `<h2 class="section-h">${events.length ? 'Evergreen ideas' : 'Date ideas for you'}</h2><div class="card-grid">${ever.map(card).join('')}</div>` : ''}
+      ${pg.html}
       <p class="fineprint">Ranked by category, region, timeliness, vibe and novelty. ${r.totalMatches} ideas matched in ${r.ms} ms. Event dates are checked against your chosen day, and expired events never show.</p>
-      <p class="fineprint">Photos: freely licensed images from Wikipedia / Wikimedia Commons. Tap a photo for the credit. "Typical dish" and "Illustrative" photos show the food or activity, not that exact venue.</p>
+      <p class="fineprint">Photos marked 📷 come from the venue's or organiser's own website and link back to it. Other photos are freely licensed (Wikipedia / Wikimedia Commons); "Typical dish" and "Illustrative" photos show the food or activity, not that exact venue.</p>
     </section>`;
     PL.photos.hydrate($app);
     renderTray();
@@ -287,8 +294,8 @@
   function photoHTML(x, opts) {
     if (!x.image_url && !x.photo) return '';
     const title = x.name;
-    const tag = x.photo_kind === 'dish' ? 'Typical dish' : x.photo_kind === 'idea' ? 'Illustrative' : '';
-    return `<figure class="ph ${opts.cls || ''}" data-photo="${esc(x.photo || '')}" data-kind="${esc(x.photo_kind || '')}" ${x.image_url ? `data-src="${esc(x.image_url)}"` : ''}
+    const tag = x.image_url ? (x.image_credit ? '📷 ' + x.image_credit : '') : x.photo_kind === 'dish' ? 'Typical dish' : x.photo_kind === 'idea' ? 'Illustrative' : '';
+    return `<figure class="ph ${opts.cls || ''}" data-photo="${esc(x.photo || '')}" data-kind="${esc(x.photo_kind || '')}" ${x.image_url ? `data-src="${esc(x.image_url)}" data-credit="${esc(x.image_credit || '')}" data-src-page="${esc(x.image_page || '')}"` : ''}
       data-w="${opts.w || 640}" data-alt="${esc((tag ? tag + ': ' : '') + title)}" data-title="${esc(title)}" data-action="photo" role="button" tabindex="0" aria-label="View photo: ${esc(title)}">
       ${tag ? `<span class="ph-tag">${tag}</span>` : ''}<span class="ph-zoom" aria-hidden="true">⤢</span></figure>`;
   }
@@ -305,9 +312,10 @@
     if (!m.options.length) return `<div class="meal none">🍽️ No ${esc(label.toLowerCase())} spot nearby matches your dietary filters. Try removing one.</div>`;
     const chosen = pickedMeal(it.activity.id, m.options);
     const dietLabel = (d) => d === 'halal' ? 'Halal' : d === 'vegetarian' ? 'Veg options' : 'No beef';
-    return `<div class="meals">
-      <p class="meal-label">${esc(label)} nearby: ${m.options.length} option${m.options.length === 1 ? '' : 's'}, pick one</p>
-      ${m.options.length < 3 ? `<p class="meal-label muted" style="text-transform:none;font-weight:500">Only ${m.options.length} nearby spot${m.options.length === 1 ? ' matches' : 's match'} your dietary needs.</p>` : ''}
+    // Collapsed to one line by default; expands to a swipeable row of options with photos.
+    return `<details class="meals" data-mealfor="${it.activity.id}" ${openMeals.has(it.activity.id) ? 'open' : ''}>
+      <summary><span class="meal-label">🍽️ ${esc(label)} nearby</span> <strong>${esc(chosen.r.name)}</strong>${chosen.r.reservation_required ? ' 📞' : ''} <span class="muted">· ${m.options.length} option${m.options.length === 1 ? '' : 's'}</span></summary>
+      ${m.options.length < 3 ? `<p class="meal-note">Only ${m.options.length} nearby spot${m.options.length === 1 ? ' matches' : 's match'} your dietary needs.</p>` : ''}
       <div class="meal-scroll" role="radiogroup" aria-label="${esc(label)} options near ${esc(it.activity.name)}">
         ${m.options.map((o) => {
           const on = o === chosen, r = o.r;
@@ -327,8 +335,15 @@
           </div>`;
         }).join('')}
       </div>
-    </div>`;
+    </details>`;
   }
+  const openMeals = new Set(); // meal pickers the user has expanded (kept open across re-renders)
+  document.addEventListener('toggle', (e) => {
+    const d = e.target;
+    if (!(d instanceof HTMLDetailsElement)) return;
+    if (d.dataset.mealfor) { if (d.open) openMeals.add(d.dataset.mealfor); else openMeals.delete(d.dataset.mealfor); }
+    if (d.open) PL.photos.hydrate(d); // load photos inside only when opened
+  }, true);
 
   function cardHTML(it) {
     const a = it.activity, cat = catById(a.categories[0]);
@@ -345,24 +360,25 @@
       <div class="card-body">
         <div class="tags">${a.categories.slice(0, 2).map((c) => `<span class="tag">${esc(catById(c).label)}</span>`).join('')}</div>
         <h3>${esc(a.name)}</h3>
-        <p class="desc">${esc(a.short_description)}</p>
-        <ul class="facts">
-          <li><span aria-hidden="true">📅</span> ${dateText(a)}</li>
-          <li><span aria-hidden="true">📍</span> <a href="${esc(U.mapUrl(a))}" target="_blank" rel="noopener">${esc(a.venue)}</a> · ${esc(a.region)}${state.prefs.region !== 'Anywhere' && a.region !== state.prefs.region ? ' <span class="muted">(next to ' + esc(state.prefs.region) + ')</span>' : ''}</li>
-          <li><span aria-hidden="true">💵</span> ${priceText(a)}${a.price_note && a.price_note.toLowerCase() !== 'free' && a.source_name !== 'Eventbrite' ? ' <span class="muted">(' + esc(a.price_note) + ')</span>' : ''}</li>
-          <li><span aria-hidden="true">⏱️</span> ${U.fmtDuration(a.duration_min)} · ${a.indoor_outdoor === 'indoor' ? '🏠 Indoor' : '🌤️ Outdoor'}</li>
-          ${a.kid_friendly ? `<li><span aria-hidden="true">👶</span> Kid-friendly${a.kid_age_min ? ' (' + a.kid_age_min + '+)' : ''}</li>` : a.source_name === 'Eventbrite' ? '<li><span aria-hidden="true">👤</span> Not listed as kid-friendly</li>' : '<li><span aria-hidden="true">🔞</span> Adults only</li>'}
+        <p class="desc clamp2" title="${esc(a.short_description)}">${esc(a.short_description)}</p>
+        <p class="meta-line">📍 <a href="${esc(U.mapUrl(a))}" target="_blank" rel="noopener">${esc(a.venue)}</a> · ${esc(a.region)}${state.prefs.region !== 'Anywhere' && a.region !== state.prefs.region ? ' <span class="muted">(next to ' + esc(state.prefs.region) + ')</span>' : ''}</p>
+        <ul class="facts-mini">
+          <li>📅 ${dateText(a)}</li>
+          <li title="${esc(a.price_note || '')}">💵 ${priceText(a)}</li>
+          <li>⏱️ ${U.fmtDuration(a.duration_min)}</li>
+          <li>${a.indoor_outdoor === 'indoor' ? '🏠 Indoor' : '🌤️ Outdoor'}</li>
+          ${a.kid_friendly ? `<li>👶 Kids${a.kid_age_min ? ' ' + a.kid_age_min + '+' : ''}</li>` : a.source_name === 'Eventbrite' ? '' : '<li>🔞 Adults</li>'}
         </ul>
-        ${a.booking_required ? `<a class="book" href="${esc(E.bookingUrl(a))}" target="_blank" rel="noopener"><span aria-hidden="true">🎟️</span> <span><strong>Booking needed</strong><br>Book tickets on the official page ↗</span></a>` : ''}
+        ${a.booking_required ? `<a class="book-link" href="${esc(E.bookingUrl(a))}" target="_blank" rel="noopener">🎟️ Booking needed · <span>Book tickets ↗</span></a>` : ''}
         ${mealHTML(it)}
-        ${it.backup ? `<p class="backup">☔ Rain plan: <strong>${esc(it.backup.activity.name)}</strong> (${it.backup.km.toFixed(1)} km away, indoor)</p>` : ''}
-        ${it.tip ? `<blockquote class="tip"><span class="tip-h">💬 Expert tip</span> ${esc(it.tip.text)}</blockquote>` : ''}
-        <p class="source">Source: ${esc(a.source_name)} · <a href="${esc(a.official_url)}" target="_blank" rel="noopener">Official page ↗</a> · Verified ${esc(U.fmtShort(a.last_verified_at))} · <a href="mailto:hello@nextdate.sg?subject=${encodeURIComponent('Issue with listing: ' + a.name)}">Report an issue</a></p>
+        ${it.backup ? `<p class="backup">☔ Rain plan: <strong>${esc(it.backup.activity.name)}</strong> (${it.backup.km.toFixed(1)} km)</p>` : ''}
+        ${it.tip ? `<p class="tip-mini clamp2" title="${esc(it.tip.text)}"><strong>💬 Expert tip:</strong> ${esc(it.tip.text)}</p>` : ''}
         <div class="actions">
           <button type="button" class="btn ${inPlan ? 'added' : 'primary'}" data-action="toggle-plan" data-id="${a.id}" aria-pressed="${inPlan}">${inPlan ? '✓ In plan' : '+ Add to plan'}</button>
-          <button type="button" class="btn icon ${saved ? 'on' : ''}" data-action="save" data-id="${a.id}" aria-pressed="${saved}" aria-label="Save for later">${saved ? '♥' : '♡'}</button>
-          <button type="button" class="btn icon" data-action="done" data-id="${a.id}" aria-label="We've done this: hide it from future results" title="We've done this">✓ Done it</button>
+          <button type="button" class="btn icon ${saved ? 'on' : ''}" data-action="save" data-id="${a.id}" aria-pressed="${saved}" aria-label="Save for later" title="Save for later">${saved ? '♥' : '♡'}</button>
+          <button type="button" class="btn icon" data-action="done" data-id="${a.id}" aria-label="We've done this: hide it from future results" title="We've done this">✓ Done</button>
         </div>
+        <p class="source">${esc(a.source_name)} · <a href="${esc(a.official_url)}" target="_blank" rel="noopener">Official page ↗</a> · Verified ${esc(U.fmtShort(a.last_verified_at))} · <a href="mailto:hello@nextdate.sg?subject=${encodeURIComponent('Issue with listing: ' + a.name)}">Report</a></p>
       </div>
     </article>`;
   }
@@ -659,7 +675,7 @@
         const x = state.result.relax[Number(el.dataset.i)];
         Object.assign(state.prefs, x.patch); state.result = null; state.shown = []; persist(); viewResults(); break;
       }
-      case 'shuffle': runRecommend(true); viewResults(); break;
+      case 'results-page': S.sset('resultsPage', Number(el.dataset.p)); viewResults(); window.scrollTo(0, 0); break;
       case 'results-tab': S.sset('resultsTab', el.dataset.tab); viewResults(); window.scrollTo(0, 0); break;
       case 'toggle-plan': togglePlan(id); break;
       case 'pick-meal': {
