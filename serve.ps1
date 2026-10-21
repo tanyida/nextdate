@@ -11,7 +11,7 @@ $types = @{
 $listener = New-Object System.Net.HttpListener
 $listener.Prefixes.Add("http://localhost:$Port/")
 $listener.Start()
-Write-Host "Paktor Lah running at http://localhost:$Port/  (Ctrl+C to stop)"
+Write-Host "Next Date running at http://localhost:$Port/  (Ctrl+C to stop)"
 try {
   while ($listener.IsListening) {
     $ctx = $listener.GetContext()

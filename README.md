@@ -1,6 +1,6 @@
-# Paktor Lah: MVP prototype
+# Next Date: MVP prototype
 
-A mobile-first web app that turns a couple's preferences into a Singapore date plan (an activity, a meal nearby and a shareable invitation), built from the Paktor Lah PRD.
+A mobile-first web app that turns a couple's preferences into a Singapore date plan (an activity, a meal nearby and a shareable invitation), built from the Next Date PRD.
 
 It has **no build step and no dependencies**: plain HTML, CSS and JavaScript. You can host it on any static host (Vercel, Netlify, GitHub Pages, S3), or run it locally.
 
@@ -45,9 +45,25 @@ sw.js, manifest.webmanifest, icon.svg  PWA (installable, offline shell)
 serve.ps1                   zero-install local server
 ```
 
-## What's on (calendar) and Memory book
+## Navigation
 
-**What's on (`#/calendar`)** is a month calendar of upcoming events, filtered by the couple's preferences: date type, budget, region, time of day, kid-friendly and source. Each day shows how many events match. Tap a day to see its events. Each event has **Plan a date**, which goes straight to the invitation using that date and time, plus a Details & tickets link and ♡ to save.
+The top menu is **Plan a date · Latest events · Gift ideas · Memories · My plans**: plain text links, with the current page in bold. On phones it becomes a row that scrolls sideways under the logo.
+
+## Latest events, Gift ideas and Memory book
+
+**Latest events (`#/events`)** is a month calendar of upcoming events. It only appears **after the user has stated their preferences** on "Plan a date", and uses exactly those preferences (date type, budget, region, time of day, kids); it has no separate filters.
+- **Before preferences:** the page asks the user to set them first, then returns them to the calendar.
+- **On the results page:** after "Find dates", the same calendar is the **📅 Latest events** tab, next to **💡 Date ideas**.
+- **Navigating:** the calendar opens on the chosen date. An "All events" switch shows everything that's on.
+- **Each event** has **Plan a date →**, which goes straight to the invitation using the event's date and time, plus a Details & tickets link and ♡ to save.
+
+**Gift ideas (`#/gifts`)** lists 26 ideas, data in `js/gifts-data.js`:
+- **Shop gifts:** well-known Singapore brands, e.g. Far East Flora, TWG Tea, Bacha Coffee, Bengawan Solo, RISIS, Bynd Artisan, Beyond the Vines and Supermama. Each links to the brand's official site.
+- **Experience gifts:** these turn straight into a date plan (pottery, couples' massage, cooking class, Night Safari).
+- **DIY ideas:** "Open when…" letters, a printed memory book, re-creating your first date.
+- **Filters:** occasion, budget, gift type and **love language**. Each idea has a "Why it works" note from a relationship-expert angle.
+- **Saving:** saved gifts appear in My plans.
+- **Disclosure:** brands are listed unpaid, with a `sponsored` flag ready for future paid placements. Photos are illustrative (Wikimedia), not brand product shots. Editors should verify each listing before launch.
 
 **Eventbrite ingestion (`ingest-eventbrite.ps1`):**
 

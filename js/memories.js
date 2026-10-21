@@ -230,7 +230,7 @@ PL.routes = PL.routes || {};
       <style>body{font:16px/1.6 Georgia,serif;background:#fffaf4;color:#2a1a22;max-width:760px;margin:0 auto;padding:24px 16px}h1{font-size:2.2rem;color:#c7354a}
       section{background:#fff;border-radius:16px;padding:20px;margin:0 0 20px;box-shadow:0 4px 16px rgba(0,0,0,.06)}.d{color:#8a6a74;font-size:.9rem;margin:0}
       .g{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin:12px 0}.g img{width:100%;border-radius:10px}</style></head>
-      <body><h1>💞 Our memory book</h1><p>${mems.length} dates, made with Paktor Lah.</p>${body}</body></html>`;
+      <body><h1>💞 Our memory book</h1><p>${mems.length} dates, made with Next Date.</p>${body}</body></html>`;
     U.download('our-memory-book.html', html, 'text/html');
     S.track('memory_exported');
   }

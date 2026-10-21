@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Paktor Lah — Singapore date planner</title>
+  <title>Next Date — Singapore date planner</title>
   <meta name="description" content="Turn your preferences into a ready-to-go Singapore date plan: an activity, a meal nearby and an invitation to send, in under two minutes.">
   <meta name="theme-color" content="#c7354a">
   <link rel="manifest" href="manifest.webmanifest">
@@ -12,35 +12,39 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap">
-  <link rel="stylesheet" href="styles.css?v=10">
+  <link rel="stylesheet" href="styles.css?v=11">
 </head>
 <body>
   <a class="skip" href="#app">Skip to content</a>
   <header class="topbar">
-    <a href="#/" class="logo" aria-label="Paktor Lah home"><span aria-hidden="true">💞</span> Paktor <em>Lah</em></a>
+    <a href="#/" class="logo" aria-label="Next Date home"><span aria-hidden="true">💞</span> Next <em>Date</em></a>
     <nav class="mainnav" aria-label="Main">
-      <a href="#/calendar"><span aria-hidden="true">📅</span> What's on</a>
-      <a href="#/memories"><span aria-hidden="true">📸</span> Memories</a>
-      <a href="#/plans">My plans</a>
+      <a href="#/" data-nav="plan">Plan a date</a>
+      <a href="#/events" data-nav="events">Latest events</a>
+      <a href="#/gifts" data-nav="gifts">Gift ideas</a>
+      <a href="#/memories" data-nav="memories">Memories</a>
+      <a href="#/plans" data-nav="plans">My plans</a>
     </nav>
   </header>
   <main id="app" tabindex="-1">
-    <p class="boot-msg" id="boot-msg">Loading Paktor Lah…</p>
-    <noscript><p class="boot-msg">Paktor Lah needs JavaScript turned on.</p></noscript>
+    <p class="boot-msg" id="boot-msg">Loading Next Date…</p>
+    <noscript><p class="boot-msg">Next Date needs JavaScript turned on.</p></noscript>
   </main>
   <footer class="foot">
     <p>Expert tips are general relationship advice, not counselling. If you need support, reach out to <a href="https://www.mindline.sg/" target="_blank" rel="noopener">mindline.sg</a> or call SOS at 1767 (24 hours).</p>
-    <p>Listings credit their sources and link to official pages. Paktor Lah doesn't sell tickets. <a href="admin.html">Editor console</a></p>
+    <p>Listings credit their sources and link to official pages. Next Date doesn't sell tickets. <a href="admin.html">Editor console</a></p>
   </footer>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script src="js/data.js?v=10"></script>
-  <script src="js/store.js?v=10"></script>
-  <script src="js/engine.js?v=10"></script>
-  <script src="js/invite.js?v=10"></script>
-  <script src="js/events-eventbrite.js?v=10"></script>
-  <script src="js/calendar.js?v=10"></script>
-  <script src="js/memories.js?v=10"></script>
-  <script src="js/app.js?v=10"></script>
+  <script src="js/data.js?v=11"></script>
+  <script src="js/store.js?v=11"></script>
+  <script src="js/engine.js?v=11"></script>
+  <script src="js/invite.js?v=11"></script>
+  <script src="js/events-eventbrite.js?v=11"></script>
+  <script src="js/calendar.js?v=11"></script>
+  <script src="js/gifts-data.js?v=11"></script>
+  <script src="js/gifts.js?v=11"></script>
+  <script src="js/memories.js?v=11"></script>
+  <script src="js/app.js?v=11"></script>
   <script>
     // If the app scripts didn't load (e.g. the js/ folder is missing on the server), say so instead of a blank page.
     (function () {
@@ -49,7 +53,7 @@
         var el = document.getElementById('app');
         el.innerHTML = '<div class="boot-msg"><h1>Sorry, the app didn’t load</h1>' +
           '<p>The page couldn’t load its script files from the <code>js/</code> folder. ' +
-          'If you just deployed, check that the <code>js</code> folder (10 files) is in your repository next to <code>index.html</code>.</p>' +
+          'If you just deployed, check that the <code>js</code> folder (12 files) is in your repository next to <code>index.html</code>.</p>' +
           '<p><a href="js/app.js">Test: open js/app.js</a></p></div>';
       }
       if (document.readyState === 'complete') check(); else window.addEventListener('load', check);

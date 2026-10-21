@@ -17,7 +17,7 @@ PL.invite = (function () {
   // its output would still be reviewed against the expert's tone guide.
   const LINES = {
     romantic: ['{to}, I planned us a little escape. Say yes?', 'Clear your {day}, {to}. I have plans for us.', 'Same us, new adventure. Come with me, {to}?'],
-    playful: ['{to}! Free on {day}? Don\'t say no, I already planned everything 😆', 'Paktor lah, {to}! Bring your appetite and your best walking shoes.', 'Breaking news: {to} has been selected for an excellent date.'],
+    playful: ['{to}! Free on {day}? Don\'t say no, I already planned everything 😆', 'Date night, {to}! Bring your appetite and your best walking shoes.', 'Breaking news: {to} has been selected for an excellent date.'],
     minimal: ['{to}, a plan for {day}. Just us.', 'Thought you\'d like this one, {to}.', '{day}. You and me. Details below.'],
     retro: ['Oi {to}, {day} we go makan and jalan-jalan, can?', '{to}, jio you go paktor this {day}. Confirm plus chop?', 'Like old times but better. {day} can or not, {to}?'],
     family: ['Family adventure alert! {day} is sorted.', 'Pack the snacks, {day} is a family day out!', 'Little explorers, big day out. See you {day}!']
@@ -93,7 +93,7 @@ PL.invite = (function () {
         ${inv.starter ? `<div><dt>Conversation starter</dt><dd>${e(inv.starter)}</dd></div>` : ''}
       </dl>
       <p class="inv-from">${inv.from ? '— ' + e(inv.from) : ''}</p>
-      <p class="inv-brand">Planned with Paktor Lah</p>
+      <p class="inv-brand">Planned with Next Date</p>
     </article>`;
   }
 
@@ -143,7 +143,7 @@ PL.invite = (function () {
     y = wrap('Dress code: ' + inv.dress, P, y, W - 2 * P, 44);
     if (inv.showCost) y = wrap('Est. cost: ~$' + inv.cost + (inv.costPartial ? ' + event tickets' : '') + ' total', P, y, W - 2 * P, 44);
     if (inv.from) { g.fillStyle = t.fg; g.font = font(700, 52, t.display); g.fillText('— ' + inv.from, P, Math.min(Math.max(y + 70, H - 260), H - 200)); }
-    g.fillStyle = t.muted; g.font = font(500, 28, t.body); g.fillText('Planned with Paktor Lah', P, H - 110);
+    g.fillStyle = t.muted; g.font = font(500, 28, t.body); g.fillText('Planned with Next Date', P, H - 110);
     return new Promise((res) => c.toBlob(res, 'image/png'));
   }
 
@@ -154,9 +154,9 @@ PL.invite = (function () {
       return d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
     };
     const esc = (s) => String(s || '').replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n');
-    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Paktor Lah//Date plan//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+    const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Next Date//Date plan//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
     inv.steps.forEach((s, i) => {
-      lines.push('BEGIN:VEVENT', 'UID:' + inv.id + '-' + i + '@paktorlah', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''),
+      lines.push('BEGIN:VEVENT', 'UID:' + inv.id + '-' + i + '@nextdate', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''),
         'DTSTART:' + stamp(inv.date, s.s), 'DTEND:' + stamp(inv.date, s.s + s.d),
         'SUMMARY:' + esc((s.k === 'm' ? '🍽️ ' : '💞 ') + stepTitle(s)),
         'LOCATION:' + esc((s.ve ? s.ve + ', ' : '') + s.ad + ', Singapore'),

@@ -1,4 +1,4 @@
-/* Paktor Lah — seed content.
+/* Next Date — seed content.
  * ILLUSTRATIVE DEMO DATA: venues are real public places, but prices, hours, dates and the
  * "event" listings are placeholders written for this prototype. Editors must verify and
  * replace every entry in the admin console before launch. Descriptions are our own words. */
@@ -30,7 +30,7 @@ PL.DIETARY = [{ id: 'halal', label: 'Halal' }, { id: 'vegetarian', label: 'Veget
     type: 'evergreen', start_date: null, end_date: null, days: null,
     time_slots: ['morning', 'afternoon', 'evening'], price_max: null, price_note: '',
     kid_friendly: true, kid_age_min: 0, booking_required: false,
-    source_name: 'Paktor Lah editors', source_url: '', sponsored: false,
+    source_name: 'Next Date editors', source_url: '', sponsored: false,
     status: 'live', pinned: false, last_verified_at: '2026-10-15'
   };
   const A = (o) => Object.assign({}, BASE, o, { official_url: o.official_url || 'https://www.visitsingapore.com/' });

@@ -1,4 +1,4 @@
-/* Paktor Lah — main app: Preferences → Recommendations → Invitation, plus My plans and the partner RSVP page. */
+/* Next Date — main app: Preferences → Recommendations → Invitation, plus My plans and the partner RSVP page. */
 (function () {
   const U = PL.util, E = PL.engine, S = PL.store, I = PL.invite;
   const esc = U.esc;
@@ -32,8 +32,14 @@
 
   // ---------------- router ----------------
   function route() {
-    const h = location.hash || '#/';
+    let h = location.hash || '#/';
+    if (h === '#/calendar') h = '#/events'; // old link
     document.body.dataset.route = h.split('/')[1] || 'home';
+    // Highlight the current section in the top menu (plan flow = "Plan a date").
+    const sec = { events: 'events', gifts: 'gifts', memories: 'memories', plans: 'plans' }[document.body.dataset.route] || 'plan';
+    document.querySelectorAll('.mainnav a').forEach((a) => {
+      if (a.dataset.nav === sec) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
+    });
     window.scrollTo(0, 0);
     if (h.startsWith('#/i/')) return viewPartner(h.slice(4));
     if (h.startsWith('#/r/')) return viewReceipt(h.slice(4));
@@ -65,7 +71,7 @@
     $app.innerHTML = `
     <section class="screen prefs">
       <header class="hero">
-        <h1>Where to paktor?</h1>
+        <h1>Where to next?</h1>
         <p>Tap a few chips and we'll plan the date: an activity, a meal nearby and an invite to send.</p>
       </header>
 
@@ -172,6 +178,8 @@
       return;
     }
     state.shown = []; state.result = null;
+    S.sset('prefsDone', true);
+    S.sset('calDay', null); S.sset('calMonth', null); // the events calendar opens on the chosen date
     S.track('prefs_submitted');
     if (surprise) {
       S.track('surprise');
@@ -186,7 +194,10 @@
       return;
     }
     persist();
-    location.hash = '#/results';
+    // Came from "Latest events"? Go back there with the calendar filtered by these preferences.
+    const next = S.sget('afterPrefs', null);
+    S.sset('afterPrefs', null);
+    location.hash = next || '#/results';
   }
 
   // =====================================================================
@@ -219,13 +230,27 @@
     const events = r.items.filter((i) => i.activity.type === 'event');
     const ever = r.items.filter((i) => i.activity.type !== 'event');
     const card = (it) => cardHTML(it);
-    $app.innerHTML = `
-    <section class="screen results">
-      <div class="summary">
+    const tab = S.sget('resultsTab', 'ideas');
+    const tabs = `<div class="seg" role="tablist" aria-label="Results view">
+        <button type="button" role="tab" aria-selected="${tab === 'ideas'}" data-action="results-tab" data-tab="ideas">💡 Date ideas</button>
+        <button type="button" role="tab" aria-selected="${tab === 'events'}" data-action="results-tab" data-tab="events">📅 Latest events</button>
+      </div>`;
+    const summary = `<div class="summary">
         <a href="#/" class="back" aria-label="Back to preferences">←</a>
         <div class="pills">${summaryChips(p)}</div>
         <a href="#/" class="edit">Edit</a>
-      </div>
+      </div>`;
+    if (tab === 'events') {
+      // Calendar of latest events, filtered by the preferences just stated.
+      $app.innerHTML = `<section class="screen results">${summary}${tabs}<div class="cal-root" id="results-cal"></div></section>`;
+      PL.calendar.render(document.getElementById('results-cal'), { embedded: true });
+      removeTray(); // "Plan a date →" on an event goes straight to the invitation
+      return;
+    }
+    $app.innerHTML = `
+    <section class="screen results">
+      ${summary}
+      ${tabs}
       ${r.items.length < 3 ? emptyState(r) : ''}
       ${events.length ? `<h2 class="section-h"><span class="live-dot" aria-hidden="true"></span> Happening on ${esc(U.fmtDate(p.date))}</h2>${events.map(card).join('')}` : ''}
       ${ever.length ? `<h2 class="section-h">${events.length ? 'Evergreen ideas' : 'Date ideas for you'}</h2>${ever.map(card).join('')}` : ''}
@@ -332,7 +357,7 @@
         ${mealHTML(it)}
         ${it.backup ? `<p class="backup">☔ Rain plan: <strong>${esc(it.backup.activity.name)}</strong> (${it.backup.km.toFixed(1)} km away, indoor)</p>` : ''}
         ${it.tip ? `<blockquote class="tip"><span class="tip-h">💬 Expert tip</span> ${esc(it.tip.text)}</blockquote>` : ''}
-        <p class="source">Source: ${esc(a.source_name)} · <a href="${esc(a.official_url)}" target="_blank" rel="noopener">Official page ↗</a> · Verified ${esc(U.fmtShort(a.last_verified_at))} · <a href="mailto:hello@paktorlah.sg?subject=${encodeURIComponent('Issue with listing: ' + a.name)}">Report an issue</a></p>
+        <p class="source">Source: ${esc(a.source_name)} · <a href="${esc(a.official_url)}" target="_blank" rel="noopener">Official page ↗</a> · Verified ${esc(U.fmtShort(a.last_verified_at))} · <a href="mailto:hello@nextdate.sg?subject=${encodeURIComponent('Issue with listing: ' + a.name)}">Report an issue</a></p>
         <div class="actions">
           <button type="button" class="btn ${inPlan ? 'added' : 'primary'}" data-action="toggle-plan" data-id="${a.id}" aria-pressed="${inPlan}">${inPlan ? '✓ In plan' : '+ Add to plan'}</button>
           <button type="button" class="btn icon ${saved ? 'on' : ''}" data-action="save" data-id="${a.id}" aria-pressed="${saved}" aria-label="Save for later">${saved ? '♥' : '♡'}</button>
@@ -538,6 +563,12 @@
         </div>`).join('') : '<p class="muted">No invitations yet. <a href="#/">Plan a date →</a></p>'}
       <h2 class="section-h">Saved for later</h2>
       ${saved.length ? saved.map((a) => `<div class="row-card"><div><strong>${esc(a.name)}</strong><br><span class="muted">${esc(a.venue)} · ${esc(a.region)}${E.isLive(a, U.sgToday()) ? '' : ' · <span class="warn">no longer available</span>'}</span></div><div class="row-actions"><button type="button" class="btn tiny" data-action="plan-from-saved" data-id="${a.id}">Plan this</button><button type="button" class="btn tiny" data-action="unsave" data-id="${a.id}" aria-label="Remove">✕</button></div></div>`).join('') : '<p class="muted">Tap ♡ on any idea to save it here.</p>'}
+      <h2 class="section-h">Saved gift ideas</h2>
+      ${(() => {
+        const gifts = S.list('savedGifts').map((id) => (PL.GIFTS || []).find((g) => g.id === id)).filter(Boolean);
+        return gifts.length ? gifts.map((g) => `<div class="row-card"><div><strong>${esc(g.name)}</strong><br><span class="muted">${esc(g.supplier)} · ${esc(PL.GIFT_BANDS[g.band])}</span></div><div class="row-actions">${g.url ? `<a class="btn tiny" href="${esc(g.url)}" target="_blank" rel="noopener">Visit ↗</a>` : ''}<button type="button" class="btn tiny" data-action="unsave-gift" data-id="${g.id}" aria-label="Remove">✕</button></div></div>`).join('')
+          : '<p class="muted">Tap ♡ on any <a href="#/gifts">gift idea</a> to keep it here.</p>';
+      })()}
       <h2 class="section-h">We've done this <span class="hint">(hidden from results)</span></h2>
       ${done.length ? done.map((a) => `<div class="row-card"><div><strong>${esc(a.name)}</strong></div><div class="row-actions"><button type="button" class="btn tiny" data-action="undone" data-id="${a.id}">Show again</button></div></div>`).join('') : '<p class="muted">Nothing hidden yet.</p>'}
     </section>`;
@@ -629,6 +660,7 @@
         Object.assign(state.prefs, x.patch); state.result = null; state.shown = []; persist(); viewResults(); break;
       }
       case 'shuffle': runRecommend(true); viewResults(); break;
+      case 'results-tab': S.sset('resultsTab', el.dataset.tab); viewResults(); window.scrollTo(0, 0); break;
       case 'toggle-plan': togglePlan(id); break;
       case 'pick-meal': {
         state.mealPick[id] = el.dataset.r; persist();
@@ -671,14 +703,15 @@
       }
       case 'dl-png': {
         const inv = currentInvite(viewInvite._tip);
-        U.download('paktor-lah-invite.png', await I.toPNG(inv)); S.track('shared'); S.track('shared_image'); break;
+        U.download('next-date-invite.png', await I.toPNG(inv)); S.track('shared'); S.track('shared_image'); break;
       }
       case 'dl-pdf': S.track('shared'); S.track('shared_pdf'); window.print(); break;
-      case 'dl-ics': U.download('paktor-lah-date.ics', I.ics(currentInvite(viewInvite._tip)), 'text/calendar'); break;
-      case 'dl-ics-partner': U.download('paktor-lah-date.ics', I.ics(viewPartner._inv), 'text/calendar'); break;
+      case 'dl-ics': U.download('next-date-date.ics', I.ics(currentInvite(viewInvite._tip)), 'text/calendar'); break;
+      case 'dl-ics-partner': U.download('next-date-date.ics', I.ics(viewPartner._inv), 'text/calendar'); break;
       case 'rsvp': await sendRsvp(el.dataset.s); break;
       case 'del-plan': S.set('plans', S.get('plans', []).filter((x) => x.id !== id)); viewPlans(); break;
       case 'unsave': S.toggleIn('saved', id, false); viewPlans(); break;
+      case 'unsave-gift': S.toggleIn('savedGifts', id, false); viewPlans(); break;
       case 'undone': S.toggleIn('done', id, false); viewPlans(); break;
       case 'plan-from-saved': state.plan = [{ id, mealIdx: 0 }]; state.draft = null; persist(); location.hash = '#/invite'; break;
     }

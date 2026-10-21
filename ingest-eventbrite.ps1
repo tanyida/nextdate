@@ -1,4 +1,4 @@
-# Paktor Lah: Eventbrite ingestion (PRD "Ingestion pipeline", steps 1–5).
+# Next Date: Eventbrite ingestion (PRD "Ingestion pipeline", steps 1–5).
 # Reads the public "this weekend in Singapore" listing pages (allowed by eventbrite.sg/robots.txt),
 # keeps FACTS ONLY (name, dates, times, venue, location, category, link), writes our own one-line
 # description, and saves js/events-eventbrite.js for the app. No Eventbrite text or images are stored.
@@ -12,11 +12,11 @@ param(
 $ErrorActionPreference = 'Stop'
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $out = Join-Path $root 'js\events-eventbrite.js'
-$ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) PaktorLahIngest/0.1 (+facts-only, links back to source)'
+$ua = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) NextDateIngest/0.1 (+facts-only, links back to source)'
 $today = [DateTime]::UtcNow.AddHours(8).ToString('yyyy-MM-dd')   # Singapore date
 $maxDate = [DateTime]::UtcNow.AddHours(8).AddDays(365).ToString('yyyy-MM-dd')
 
-# Eventbrite category -> Paktor Lah categories. $null = not a date idea (skipped).
+# Eventbrite category -> Next Date categories. $null = not a date idea (skipped).
 $catMap = @{
   'Music' = @('arts', 'nightlife'); 'Performing & Visual Arts' = @('arts'); 'Community & Culture' = @('arts', 'tours')
   'Film, Media & Entertainment' = @('arts', 'chill'); 'Travel & Outdoor' = @('tours', 'nature'); 'Sports & Fitness' = @('sports')

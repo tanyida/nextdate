@@ -1,8 +1,8 @@
 /* Service worker: caches the app shell so saved plans open offline. */
-const CACHE = 'paktorlah-v3';
+const CACHE = 'nextdate-v4';
 const SHELL = ['./', './index.html', './styles.css', './manifest.webmanifest', './icon.svg',
   './js/data.js', './js/store.js', './js/engine.js', './js/invite.js', './js/events-eventbrite.js',
-  './js/calendar.js', './js/memories.js', './js/app.js'];
+  './js/calendar.js', './js/gifts-data.js', './js/gifts.js', './js/memories.js', './js/app.js'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

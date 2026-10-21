@@ -298,7 +298,7 @@
         const j = JSON.parse(await e.target.files[0].text());
         if (!Array.isArray(j.activities) || !Array.isArray(j.restaurants) || !Array.isArray(j.tips)) throw new Error('bad');
         content = j; save('Content imported'); render();
-      } catch (err) { toast('That file isn\'t a Paktor Lah export.'); }
+      } catch (err) { toast('That file isn\'t a Next Date export.'); }
     };
   }
 
@@ -316,7 +316,7 @@
     const el = e.target.closest('[data-a]'); if (!el) return;
     const id = el.dataset.id, A = (x) => content.activities.find((a) => a.id === x);
     switch (el.dataset.a) {
-      case 'new': editActivity({ id: 'a-' + U.randomId(4).toLowerCase(), name: '', short_description: '', type: 'evergreen', categories: [], vibes: [], start_date: null, end_date: null, days: null, time_slots: ['morning', 'afternoon', 'evening'], duration_min: 120, price_min: 0, price_max: null, price_note: '', venue: '', address: '', postal_code: '', lat: null, lng: null, region: 'Central', indoor_outdoor: 'indoor', kid_friendly: true, kid_age_min: 0, booking_required: false, official_url: '', source_name: 'Paktor Lah editors', source_url: '', sponsored: false, status: 'draft', pinned: false, last_verified_at: today() }, true); break;
+      case 'new': editActivity({ id: 'a-' + U.randomId(4).toLowerCase(), name: '', short_description: '', type: 'evergreen', categories: [], vibes: [], start_date: null, end_date: null, days: null, time_slots: ['morning', 'afternoon', 'evening'], duration_min: 120, price_min: 0, price_max: null, price_note: '', venue: '', address: '', postal_code: '', lat: null, lng: null, region: 'Central', indoor_outdoor: 'indoor', kid_friendly: true, kid_age_min: 0, booking_required: false, official_url: '', source_name: 'Next Date editors', source_url: '', sponsored: false, status: 'draft', pinned: false, last_verified_at: today() }, true); break;
       case 'edit': editActivity(A(id)); break;
       case 'approve': {
         const a = A(id), next = Object.assign({}, a, { status: 'live' }), block = liveBlockers(next);
@@ -350,7 +350,7 @@
         let n = 0; content.activities.forEach((a) => { if (a.type === 'event' && a.status === 'live' && a.end_date < today()) { a.status = 'expired'; n++; } });
         save(n + ' event(s) expired'); dataTab(); break;
       }
-      case 'export': U.download('paktorlah-content-' + today() + '.json', JSON.stringify(content, null, 2), 'application/json'); break;
+      case 'export': U.download('nextdate-content-' + today() + '.json', JSON.stringify(content, null, 2), 'application/json'); break;
       case 'reset': if (confirm('Discard all editor changes on this device?')) { S.resetContent(); content = clone(S.content()); toast('Reset to seed data'); dataTab(); } break;
     }
   });

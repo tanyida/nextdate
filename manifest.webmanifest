@@ -1,6 +1,6 @@
 {
-  "name": "Paktor Lah — Singapore date planner",
-  "short_name": "Paktor Lah",
+  "name": "Next Date — Singapore date planner",
+  "short_name": "Next Date",
   "description": "Plan a Singapore date in under two minutes: an activity, a meal nearby and an invitation to send.",
   "start_url": "./index.html#/",
   "scope": "./",
