@@ -24,7 +24,10 @@
       <a href="#/plans">My plans</a>
     </nav>
   </header>
-  <main id="app" tabindex="-1"></main>
+  <main id="app" tabindex="-1">
+    <p class="boot-msg" id="boot-msg">Loading Paktor Lah…</p>
+    <noscript><p class="boot-msg">Paktor Lah needs JavaScript turned on.</p></noscript>
+  </main>
   <footer class="foot">
     <p>Expert tips are general relationship advice, not counselling. If you need support, reach out to <a href="https://www.mindline.sg/" target="_blank" rel="noopener">mindline.sg</a> or call SOS at 1767 (24 hours).</p>
     <p>Listings credit their sources and link to official pages. Paktor Lah doesn't sell tickets. <a href="admin.html">Editor console</a></p>
@@ -38,5 +41,19 @@
   <script src="js/calendar.js?v=10"></script>
   <script src="js/memories.js?v=10"></script>
   <script src="js/app.js?v=10"></script>
+  <script>
+    // If the app scripts didn't load (e.g. the js/ folder is missing on the server), say so instead of a blank page.
+    (function () {
+      function check() {
+        if (window.PL && PL.app) return;
+        var el = document.getElementById('app');
+        el.innerHTML = '<div class="boot-msg"><h1>Sorry, the app didn’t load</h1>' +
+          '<p>The page couldn’t load its script files from the <code>js/</code> folder. ' +
+          'If you just deployed, check that the <code>js</code> folder (10 files) is in your repository next to <code>index.html</code>.</p>' +
+          '<p><a href="js/app.js">Test: open js/app.js</a></p></div>';
+      }
+      if (document.readyState === 'complete') check(); else window.addEventListener('load', check);
+    })();
+  </script>
 </body>
 </html>

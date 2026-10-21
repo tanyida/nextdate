@@ -57,6 +57,10 @@ main { max-width: 760px; margin: 0 auto; padding: 0 16px 24px; outline: none; }
 /* Invitation builder and the partner's invitation page stay clean: no footer. */
 body[data-route="invite"] .foot, body[data-route="i"] .foot { display: none; }
 
+.boot-msg { padding: 48px 0; text-align: center; color: var(--muted); }
+.boot-msg h1 { font: 700 1.5rem var(--display); color: var(--ink); }
+.boot-msg code { background: var(--surface-2); padding: 1px 6px; border-radius: 6px; }
+
 /* ---------- buttons & chips ---------- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 10px 16px;
   border-radius: 999px; border: 1.5px solid var(--line); background: var(--surface); color: var(--ink); font-weight: 600;
