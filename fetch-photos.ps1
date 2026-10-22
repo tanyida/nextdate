@@ -40,7 +40,33 @@ $targets = @(
   @{ id = 'a-zoo'; url = 'https://www.mandai.com/en/singapore-zoo.html'; credit = 'Mandai Wildlife Reserve' }
   @{ id = 'a-sentosa'; url = 'https://www.sentosa.com.sg/'; credit = 'Sentosa' }
   @{ id = 'a-jewel'; url = 'https://www.jewelchangiairport.com/'; credit = 'Jewel Changi Airport' }
+  @{ id = 'a-flyer'; url = 'https://www.singaporeflyer.com/'; credit = 'Singapore Flyer' }
+  @{ id = 'a-cablecar'; url = 'https://www.mountfaberleisure.com/'; credit = 'Mount Faber Leisure' }
+  @{ id = 'a-skyline-luge'; url = 'https://www.skylineluge.com/en/sentosa'; credit = 'Skyline Luge Sentosa' }
+  @{ id = 'a-birdparadise'; url = 'https://www.mandai.com/en/bird-paradise.html'; credit = 'Mandai Wildlife Reserve' }
+  @{ id = 'a-riverwonders'; url = 'https://www.mandai.com/en/river-wonders.html'; credit = 'Mandai Wildlife Reserve' }
+  @{ id = 'a-ifly'; url = 'https://www.iflysingapore.com/'; credit = 'iFly Singapore' }
   @{ id = 'e-jazzbay'; url = 'https://www.esplanade.com/'; credit = 'Esplanade' }
+  @{ id = 'ss-perfume'; url = 'https://www.seeksophie.com/experiences/singapore-private-perfume-making-workshop-opo508xozw'; credit = 'Seek Sophie' }
+  @{ id = 'ss-watch'; url = 'https://www.seeksophie.com/experiences/singapore-induction-to-watchmaking-make-watch-movement-o1ojqwdkj4'; credit = 'Seek Sophie' }
+  @{ id = 'ss-silver'; url = 'https://www.seeksophie.com/experiences/singapore-basic-silversmithing-workshop-3-hrs-omwjy78vjl'; credit = 'Seek Sophie' }
+  @{ id = 'ss-moss-lamp'; url = 'https://www.seeksophie.com/experiences/singapore-preserved-moss-mood-lamp-oroz3nl9jv'; credit = 'Seek Sophie' }
+  @{ id = 'ss-leather'; url = 'https://www.seeksophie.com/experiences/singapore-craft-leather-essentials-in-a-trendy-studio-new-bahru-opo5038l5w'; credit = 'Seek Sophie' }
+  @{ id = 'ss-bonsai'; url = 'https://www.seeksophie.com/experiences/singapore-private-japanese-style-bonsai-workshop-take-home-an-indoor-friendly-bonsai-ol2zeywwj7'; credit = 'Seek Sophie' }
+  @{ id = 'ss-magic'; url = 'https://www.seeksophie.com/experiences/singapore-a-night-at-the-magic-bar-ol2zm0lvj7'; credit = 'Seek Sophie' }
+  @{ id = 'ss-pizza'; url = 'https://www.seeksophie.com/experiences/singapore-wood-fired-oven-pizza-making-experience-o7mzxqm3jo'; credit = 'Seek Sophie' }
+  @{ id = 'ss-kintsugi'; url = 'https://www.seeksophie.com/experiences/singapore-learn-kintsugi-the-ancient-japanese-art-of-mending-pottery-in-a-serene-calm-art-studio-ongz7ery56'; credit = 'Seek Sophie' }
+  @{ id = 'ss-gin'; url = 'https://www.seeksophie.com/experiences/singapore-gin-distillery-tour-with-tasting-flight-and-singapore-sling-masterclass-oe6z2284zn'; credit = 'Seek Sophie' }
+  @{ id = 'ss-dark-dining'; url = 'https://www.seeksophie.com/experiences/singapore-dine-in-total-darkness-with-blind-hosts-in-singapore-3-course-dinner-ongz794qj6'; credit = 'Seek Sophie' }
+  @{ id = 'ss-tingkat'; url = 'https://www.seeksophie.com/experiences/singapore-mini-peranakan-tingkat-painting-oogz42ko51'; credit = 'Seek Sophie' }
+  @{ id = 'ss-cocktail'; url = 'https://www.seeksophie.com/experiences/singapore-craft-3-cocktails-in-an-intimate-cocktail-bar-volume-2-0-ol2zelyo57'; credit = 'Seek Sophie' }
+  @{ id = 'ss-sake'; url = 'https://www.seeksophie.com/experiences/singapore-fermentopia-sake-tasting-ol2zel1q57'; credit = 'Seek Sophie' }
+  @{ id = 'ss-ubin-kayak'; url = 'https://www.seeksophie.com/experiences/singapore-join-in-kayak-trip-to-pulau-ubin-expedition-oxp5w60kjr'; credit = 'Seek Sophie' }
+  @{ id = 'ss-chocolate'; url = 'https://www.seeksophie.com/experiences/singapore-bean-to-bar-chocolate-making-workshop-o4k5vxgqze'; credit = 'Seek Sophie' }
+  @{ id = 'ss-pasta'; url = 'https://www.seeksophie.com/experiences/singapore-make-fancy-pasta-o1ojq43v54'; credit = 'Seek Sophie' }
+  @{ id = 'ss-memory-box'; url = 'https://www.seeksophie.com/experiences/singapore-memory-box-class-o97jdx145g'; credit = 'Seek Sophie' }
+  @{ id = 'ss-haunted'; url = 'https://www.seeksophie.com/experiences/singapore-explore-singapore-haunted-side-o4k5vo1nze'; credit = 'Seek Sophie' }
+  @{ id = 'ss-kayak-fishing'; url = 'https://www.seeksophie.com/experiences/singapore-sentosa-kayak-fishing-night-ovmj1nv0z7'; credit = 'Seek Sophie' }
 )
 
 function Get-OgImage([string]$html, [string]$base) {

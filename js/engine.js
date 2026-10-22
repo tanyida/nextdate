@@ -6,6 +6,7 @@ PL.engine = (function () {
   const U = PL.util;
 
   const BUDGETS = {
+    'free': { label: 'Free', max: 0 },
     'u50': { label: 'Under $50', max: 50 },
     '50-100': { label: '$50–$100', max: 100 },
     '100-200': { label: '$100–$200', max: 200 },
@@ -48,7 +49,7 @@ PL.engine = (function () {
     return {
       categories: [], budget: '50-100', duration: '2-3', dateMode: 'weekend', date: U.thisWeekend(),
       slot: 'evening', region: 'Anywhere', meal: 'auto', cuisines: [], dietary: [],
-      withKids: false, kidAges: '4-7', kidCount: 1, io: 'either', rainBackup: true, vibes: []
+      withKids: false, kidAges: '4-7', kidCount: 1, withPet: false, io: 'either', rainBackup: true, vibes: []
     };
   }
 
@@ -76,11 +77,13 @@ PL.engine = (function () {
     }
     if (!a.time_slots.includes(p.slot)) return 'slot';
     if (activityCost(a, p) > BUDGETS[p.budget].max) return 'budget';
+    if (p.budget === 'free' && a.price_min == null) return 'budget'; // unknown price can't be promised as free
     if (a.duration_min > DURATIONS[p.duration].max) return 'duration';
     if (p.withKids) {
       if (!a.kid_friendly) return 'kids';
       if ((a.kid_age_min || 0) > KID_AGES[p.kidAges]) return 'kids';
     }
+    if (p.withPet && !a.pet_friendly) return 'pet';
     if (p.io !== 'either' && a.indoor_outdoor !== p.io) return 'io';
     if (p.region !== 'Anywhere' && a.region !== p.region && !(ADJACENT[p.region] || []).includes(a.region)) return 'region';
     return null;
@@ -140,7 +143,9 @@ PL.engine = (function () {
     const fits = (x) => mealCost(x.r, p) <= budgetLeft;
     // Preference order: cuisine match → within budget → closest. Weaker matches only fill up to 3.
     const list = near
-      .sort((x, y) => (cuisineHit(y) - cuisineHit(x)) || (fits(y) - fits(x)) || x.km - y.km)
+      // Bringing a pet: pet-friendly spots first (most others still work for a takeaway picnic).
+      .sort((x, y) => (p.withPet ? (!!y.r.pet_friendly - !!x.r.pet_friendly) : 0) || (cuisineHit(y) - cuisineHit(x)) || (fits(y) - fits(x))
+        || (budgetLeft <= 0 ? x.r.price_band - y.r.price_band : 0) || x.km - y.km) // free dates: cheapest eats first
       .filter((x, i) => i < MIN || (cuisineHit(x) && fits(x)))
       .slice(0, 5)
       .map((x) => Object.assign({}, x, { widened: x.km > 1.5, cost: mealCost(x.r, p), overBudget: !fits(x), cuisineMatch: cuisineHit(x) }));
@@ -249,6 +254,7 @@ PL.engine = (function () {
     if (di < dKeys.length - 1) tries.push({ label: 'Allow ' + DURATIONS[dKeys[di + 1]].label.toLowerCase(), patch: { duration: dKeys[di + 1] } });
     if (p.categories.length) tries.push({ label: 'Show all date types', patch: { categories: [] } });
     if (p.io !== 'either') tries.push({ label: 'Indoor or outdoor', patch: { io: 'either' } });
+    if (p.withPet) tries.push({ label: 'Leave the pet at home this time', patch: { withPet: false } });
     ['morning', 'afternoon', 'evening'].filter((s) => s !== p.slot).forEach((s) => tries.push({ label: 'Try ' + s + ' instead', patch: { slot: s } }));
     return tries.map((t) => {
       const q = Object.assign({}, p, t.patch);

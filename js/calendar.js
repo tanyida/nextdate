@@ -12,7 +12,7 @@ PL.calendar = (function () {
   // Filters come straight from the stated preferences.
   function filters() {
     const p = PL.app.state.prefs;
-    return { categories: p.categories, budget: p.budget, region: p.region, slot: p.slot, kids: p.withKids, all: S.sget('calAll', false) };
+    return { categories: p.categories, budget: p.budget, region: p.region, slot: p.slot, kids: p.withKids, pet: p.withPet, all: S.sget('calAll', false) };
   }
 
   function covers(a, day) {
@@ -26,13 +26,14 @@ PL.calendar = (function () {
     if (f.region !== 'Anywhere' && a.region !== f.region) return false;
     if (!a.time_slots.includes(f.slot)) return false;
     if (f.kids && !a.kid_friendly) return false;
+    if (f.pet && !a.pet_friendly) return false;
     return true;
   }
   const byTime = (x, y) => ((x.start_time || '99') < (y.start_time || '99') ? -1 : 1);
 
   function summary(p) {
     const cats = p.categories.length ? p.categories.map((c) => PL.app.catById(c).label.split(' ')[0]).join(', ') : 'All types';
-    return [cats, E.BUDGETS[p.budget].label, p.region, E.SLOTS[p.slot].label, p.withKids ? 'Kid-friendly' : 'Just us']
+    return [cats, E.BUDGETS[p.budget].label, p.region, E.SLOTS[p.slot].label, p.withKids ? 'Kid-friendly' : 'Just us'].concat(p.withPet ? ['🐾 With pet'] : [])
       .map((b) => `<span class="pill">${esc(b)}</span>`).join('');
   }
 

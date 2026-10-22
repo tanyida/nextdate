@@ -1,7 +1,7 @@
 /* Service worker: caches the app shell so saved plans open offline. */
-const CACHE = 'nextdate-v4';
+const CACHE = 'nextdate-v6';
 const SHELL = ['./', './index.html', './styles.css', './manifest.webmanifest', './icon.svg',
-  './js/data.js', './js/photos-official.js', './js/store.js', './js/engine.js', './js/invite.js', './js/events-eventbrite.js',
+  './js/data.js', './js/photos-official.js', './js/store.js', './js/engine.js', './js/invite.js', './js/events-eventbrite.js', './js/activities-gyg.js', './js/activities-curated.js',
   './js/calendar.js', './js/gifts-data.js', './js/gifts.js', './js/memories.js', './js/app.js'];
 
 self.addEventListener('install', (e) => {

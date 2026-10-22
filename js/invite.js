@@ -40,26 +40,82 @@ PL.invite = (function () {
     return 'Smart casual: dress up a little, it\'s a date.';
   }
 
+  // ---- Hints for teaser / mystery invitations ----
+  const CLUES = {
+    nature: ['Somewhere green, where the trees outnumber the people', 'Comfy shoes, fresh air and a view worth the walk', 'Where the birds get better views than us', 'Bring sunnies: we\'re going outside'],
+    arts: ['Somewhere that will make us both look smarter', 'Bring your opinions: there will be things to discuss', 'Culture, but make it a date', 'Prepare to say "hmm, interesting" a lot'],
+    workshops: ['We\'re making something with our own four hands', 'Wear clothes you don\'t mind getting a little messy', 'We\'re coming home with a souvenir we made ourselves', 'No experience needed, just patience with me'],
+    tours: ['A little exploring, a lot of stories', 'Bring curiosity and your walking legs', 'We\'re playing tourist in our own city', 'There will be a guide, and probably photos'],
+    sports: ['Stretch first: there may be cheering involved', 'Sporty mode on. Loser buys drinks', 'Something that gets our hearts racing (literally)', 'Wear sneakers. Trust me.'],
+    food: ['Come hungry. Very hungry.', 'Our stomachs are the main characters today', 'Eat first, talk later', 'Calories don\'t count on dates, right?'],
+    nightlife: ['Something that sparkles after dark', 'Dress for the evening and bring your best stories', 'A grown-up night out', 'The fun starts when the sun goes down'],
+    events: ['Something that only happens for a limited time', 'It\'s happening now, and we\'re going', 'A one-time-only kind of plan', 'Blink and you\'d miss it'],
+    wellness: ['Total relaxation mode', 'Pack zero stress', 'Somewhere calm, where we can both unplug', 'You deserve this one'],
+    chill: ['Low-key, no pressure, just us', 'Something cosy and easy', 'The kind of plan where we can just talk', 'Slow and sweet']
+  };
+  const EMOJI = { nature: '🌿', arts: '🎨', workshops: '🛠️', tours: '🗺️', sports: '💪', food: '😋', nightlife: '🍸', events: '✨', wellness: '💆', chill: '☕' };
+  const MEAL_CLUES = {
+    Local: ['Plastic chairs, legendary food', 'Where the aunties and uncles know best'], Japanese: ['Itadakimasu-level dinner', 'Chopsticks at the ready'],
+    Western: ['Knife-and-fork fancy', 'Something hearty, Western-style'], Italian: ['Mamma mia, it\'s good', 'Carbs, cheese and candlelight'],
+    Peranakan: ['Flavours like Grandma used to make', 'Nonya magic on a plate'], Seafood: ['Bibs may be required', 'Something from the sea'],
+    Indian: ['Spice level: you decide', 'Curry that hugs your soul'], Malay: ['Sambal is involved', 'Rich, spicy and shiok'],
+    Korean: ['Grill and chill', 'We cook it ourselves, at the table'], Chinese: ['Lazy Susan energy', 'Shared plates, shared stories'],
+    Thai: ['Sweet, sour and a little fiery', 'Tom yum feelings'], 'Middle Eastern': ['Smoky grills and fresh bread', 'Mezze for two'],
+    'Café': ['Coffee strong enough to keep up with me', 'Brunchy vibes'], _: ['A meal I\'ve picked just for you', 'Food you\'ll thank me for']
+  };
+  const AREA = { North: 'up North', 'North-East': 'in the North-East', East: 'in the East', West: 'out West', Central: 'in town' };
+  const pick = (arr, n) => arr[((n % arr.length) + arr.length) % arr.length];
+
+  function hintFor(place, kind, mode, n) {
+    if (kind === 'meal') {
+      const c = (place.cuisines || []).find((x) => MEAL_CLUES[x]) || '_';
+      return { e: '🍽️', h: pick(MEAL_CLUES[c], n), area: place.region ? 'Somewhere ' + AREA[place.region] : '', cat: c === '_' ? '' : c };
+    }
+    const cat = (place.categories || [])[0] || 'chill';
+    const extras = [];
+    const name = (place.name || '').toLowerCase();
+    if (/cruise|boat|kayak|paddl|jetboard|fishing/.test(name)) extras.push('🌊 we\'ll be on the water');
+    else if (place.indoor_outdoor === 'indoor') extras.push('❄️ it\'s air-conditioned');
+    else extras.push('☀️ it\'s outdoors');
+    if (place.time_slots && place.time_slots.length === 1 && place.time_slots[0] === 'evening') extras.push('✨ best after dark');
+    const label = (PL.CATEGORIES.find((c) => c.id === cat) || {}).label || '';
+    return { e: EMOJI[cat] || '✨', h: pick(CLUES[cat] || CLUES.chill, n) + (mode === 'mystery' ? '' : ' (' + extras.join(', ') + ')'),
+      area: place.approx_location ? 'Somewhere in town' : (place.region ? 'Somewhere ' + AREA[place.region] : ''), cat: label };
+  }
+
   // Compact, link-embeddable payload. No surname or phone number is collected.
+  // mode: 'full' (real plan) · 'teaser' (hint + area + type) · 'mystery' (hint only). Teaser/mystery links
+  // carry no venue names, addresses or links, so the surprise can't be spoiled by peeking at the URL.
   function build(plan, prefs, fields) {
     const it = PL.engine.itinerary(plan, prefs);
+    const mode = fields.mode || 'full', seed = fields.hintSeed || 0;
     return {
       v: 1, id: fields.id || U.randomId(9), tpl: fields.tpl, to: fields.to, from: fields.from,
       msg: fields.msg, line: fields.line, starter: fields.starter, showCost: fields.showCost,
-      date: prefs.date, kids: prefs.withKids,
+      date: prefs.date, kids: prefs.withKids, mode,
       dress: dressCode(plan.map((p) => p.activity)),
       cost: it.cost, costPartial: plan.some((p) => p.activity.price_min == null),
-      steps: it.steps.map((s) => ({
-        k: s.kind === 'meal' ? 'm' : 'a', n: s.place.name, ve: s.place.venue || '', ad: s.place.address,
-        la: s.place.lat, lo: s.place.lng, s: s.start, d: s.dur,
-        u: s.kind === 'meal' ? (s.place.reservation_required ? PL.engine.reserveUrl(s.place) : (s.place.booking_url || '')) : PL.engine.bookingUrl(s.place),
-        mt: s.place.mealType || '', bk: !!s.place.booking_required, rv: !!s.place.reservation_required
-      })),
+      steps: it.steps.map((s, i) => {
+        const base = { k: s.kind === 'meal' ? 'm' : 'a', s: s.start, d: s.dur, mt: s.place.mealType || '' };
+        if (mode !== 'full') {
+          const hint = hintFor(s.place, s.kind, mode, seed + i * 3);
+          return Object.assign(base, { h: hint.h, e: hint.e }, mode === 'teaser' ? { ar: hint.area, ct: hint.cat } : {});
+        }
+        return Object.assign(base, {
+          n: s.place.name, ve: s.place.venue || '', ad: s.place.address, la: s.place.lat, lo: s.place.lng,
+          u: s.kind === 'meal' ? (s.place.reservation_required ? PL.engine.reserveUrl(s.place) : (s.place.booking_url || '')) : PL.engine.bookingUrl(s.place),
+          bk: !!s.place.booking_required, rv: !!s.place.reservation_required
+        });
+      }),
       exp: U.addDays(prefs.date, 30)
     };
   }
 
-  function stepTitle(s) { return s.k === 'm' ? (PL.engine.MEALS[s.mt] ? PL.engine.MEALS[s.mt].label : 'Meal') + ' · ' + s.n : s.n; }
+  function stepTitle(s) {
+    const meal = PL.engine.MEALS[s.mt] ? PL.engine.MEALS[s.mt].label : 'Meal';
+    if (s.h) return (s.k === 'm' ? meal + ': ' : '') + s.h;
+    return s.k === 'm' ? meal + ' · ' + s.n : s.n;
+  }
 
   function cardHTML(inv) {
     const t = byId(inv.tpl), e = U.esc;
@@ -74,8 +130,17 @@ PL.invite = (function () {
         <span class="inv-date">${e(U.fmtDate(inv.date, { weekday: 'long', day: 'numeric', month: 'long' }))}</span>
         ${inv.steps.length ? `<span class="inv-time">${U.fmtTime(inv.steps[0].s)} – ${U.fmtTime(end)}</span>` : ''}
       </div>
+      ${inv.mode && inv.mode !== 'full' ? `<p class="inv-surprise">🎁 ${inv.mode === 'mystery' ? 'It\'s a mystery date! Here are your clues…' : 'It\'s a surprise. Here\'s a sneak peek…'}</p>` : ''}
       <ol class="inv-steps">
-        ${inv.steps.map((s) => `
+        ${inv.steps.map((s, i) => s.h ? `
+          <li class="inv-step ${s.k === 'm' ? 'is-meal' : ''} is-hint">
+            <span class="inv-step-time">${U.fmtTime(s.s)}</span>
+            <div>
+              <span class="inv-clue-n">Clue ${i + 1}</span>
+              <strong>${e(s.e || '✨')} ${e(stepTitle(s))}</strong>
+              ${s.ar || s.ct ? `<span class="inv-map">${s.ct ? e(s.ct) : ''}${s.ct && s.ar ? ' · ' : ''}${s.ar ? '📍 ' + e(s.ar) : ''}</span>` : ''}
+            </div>
+          </li>` : `
           <li class="inv-step ${s.k === 'm' ? 'is-meal' : ''}">
             <span class="inv-step-time">${U.fmtTime(s.s)}</span>
             <div>
@@ -93,7 +158,6 @@ PL.invite = (function () {
         ${inv.starter ? `<div><dt>Conversation starter</dt><dd>${e(inv.starter)}</dd></div>` : ''}
       </dl>
       <p class="inv-from">${inv.from ? '— ' + e(inv.from) : ''}</p>
-      <p class="inv-brand">Planned with Next Date</p>
     </article>`;
   }
 
@@ -136,14 +200,14 @@ PL.invite = (function () {
     inv.steps.forEach((s) => {
       g.fillStyle = t.accent; g.font = font(700, 36, t.body); g.fillText(U.fmtTime(s.s), P, y);
       g.fillStyle = t.fg; g.font = font(700, 42, t.body); const yy = wrap(stepTitle(s), P + 190, y, W - 2 * P - 190, 52);
-      g.fillStyle = t.muted; g.font = font(400, 32, t.body); y = wrap((s.ve && s.ve !== s.n ? s.ve + ', ' : '') + s.ad, P + 190, yy, W - 2 * P - 190, 42) + 40;
+      const sub = s.h ? [s.ct, s.ar].filter(Boolean).join(' · ') : (s.ve && s.ve !== s.n ? s.ve + ', ' : '') + s.ad;
+      g.fillStyle = t.muted; g.font = font(400, 32, t.body); y = (sub ? wrap(sub, P + 190, yy, W - 2 * P - 190, 42) : yy) + 40;
     });
     if (inv.msg) { g.fillStyle = t.fg; g.font = font(400, 40, t.body); y = wrap('“' + inv.msg.replace(/\n/g, ' ') + '”', P, y + 10, W - 2 * P, 54) + 30; }
     g.font = font(400, 32, t.body); g.fillStyle = t.muted;
     y = wrap('Dress code: ' + inv.dress, P, y, W - 2 * P, 44);
     if (inv.showCost) y = wrap('Est. cost: ~$' + inv.cost + (inv.costPartial ? ' + event tickets' : '') + ' total', P, y, W - 2 * P, 44);
     if (inv.from) { g.fillStyle = t.fg; g.font = font(700, 52, t.display); g.fillText('— ' + inv.from, P, Math.min(Math.max(y + 70, H - 260), H - 200)); }
-    g.fillStyle = t.muted; g.font = font(500, 28, t.body); g.fillText('Planned with Next Date', P, H - 110);
     return new Promise((res) => c.toBlob(res, 'image/png'));
   }
 
@@ -158,9 +222,9 @@ PL.invite = (function () {
     inv.steps.forEach((s, i) => {
       lines.push('BEGIN:VEVENT', 'UID:' + inv.id + '-' + i + '@nextdate', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, ''),
         'DTSTART:' + stamp(inv.date, s.s), 'DTEND:' + stamp(inv.date, s.s + s.d),
-        'SUMMARY:' + esc((s.k === 'm' ? '🍽️ ' : '💞 ') + stepTitle(s)),
-        'LOCATION:' + esc((s.ve ? s.ve + ', ' : '') + s.ad + ', Singapore'),
-        'DESCRIPTION:' + esc((inv.from ? 'Planned by ' + inv.from + '. ' : '') + (s.u ? s.u : '')),
+        'SUMMARY:' + esc(s.h ? (s.k === 'm' ? '🍽️ Surprise meal' : '🎁 Mystery date') + (inv.from ? ' with ' + inv.from : '') : (s.k === 'm' ? '🍽️ ' : '💞 ') + stepTitle(s)),
+        'LOCATION:' + esc(s.h ? (s.ar ? s.ar + ', Singapore' : 'Surprise!') : (s.ve ? s.ve + ', ' : '') + s.ad + ', Singapore'),
+        'DESCRIPTION:' + esc(s.h ? 'Clue: ' + s.h + '. Dress code: ' + inv.dress : (inv.from ? 'Planned by ' + inv.from + '. ' : '') + (s.u ? s.u : '')),
         'END:VEVENT');
     });
     lines.push('END:VCALENDAR');

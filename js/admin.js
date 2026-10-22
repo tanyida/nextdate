@@ -35,7 +35,7 @@
     { k: 'lat', t: 'number', nullable: 1 }, { k: 'lng', t: 'number', nullable: 1 },
     { k: 'region', t: 'select', o: PL.REGIONS }, { k: 'indoor_outdoor', t: 'select', o: ['indoor', 'outdoor'] },
     { k: 'kid_friendly', t: 'bool' }, { k: 'kid_age_min', t: 'number', label: 'Min kid age' },
-    { k: 'booking_required', t: 'bool' }, { k: 'sponsored', t: 'bool' }, { k: 'pinned', t: 'bool', label: 'Editorial pin (seasonal boost)' },
+    { k: 'booking_required', t: 'bool' }, { k: 'pet_friendly', t: 'bool', label: 'Pet-friendly (leashed pets welcome)' }, { k: 'sponsored', t: 'bool' }, { k: 'pinned', t: 'bool', label: 'Editorial pin (seasonal boost)' },
     { k: 'official_url', t: 'url', full: 1 }, { k: 'booking_url', t: 'url', full: 1, label: 'Booking / ticketing link (blank = official page)' },
     { k: 'source_name' }, { k: 'source_url', t: 'url' }, { k: 'last_verified_at', t: 'date' },
     ...PHOTO_FIELDS('idea', 'Illustrative (activity, not this venue)')
@@ -50,6 +50,7 @@
     { k: 'region', t: 'select', o: PL.REGIONS },
     { k: 'reservation_required', t: 'bool', label: 'Reservation recommended' },
     { k: 'beef_focused', t: 'bool', label: 'Beef-focused menu (hidden for "No beef")' },
+    { k: 'pet_friendly', t: 'bool', label: 'Pet-friendly seating' },
     { k: 'booking_url', t: 'url', label: 'Reservation link (blank = Google Maps search)' },
     ...PHOTO_FIELDS('dish', 'Typical dish (not this restaurant)')
   ];

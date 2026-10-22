@@ -109,6 +109,9 @@
           <p class="sublabel">How many kids?</p>
           ${chips('kidCount', ['1', '2', '3'], String(p.kidCount))}
         </div>
+        <p class="sublabel">Bringing a pet?</p>
+        ${chips('withPet', [{ id: 'no', label: 'No pets' }, { id: 'yes', label: '🐾 Our pet is coming' }], p.withPet ? 'yes' : 'no')}
+        <p class="hint pet-hint ${p.withPet ? '' : 'hidden'}">We'll only suggest places that welcome leashed pets. Nature reserves, attractions and food centres usually don't.</p>
       </fieldset>
 
       <details class="more" ${advancedOpen ? 'open' : ''} id="more">
@@ -157,6 +160,7 @@
       btn.parentElement.querySelectorAll('.chip').forEach((c) => { c.classList.remove('on'); c.setAttribute('aria-pressed', 'false'); });
       btn.classList.add('on'); btn.setAttribute('aria-pressed', 'true');
       if (g === 'withKids') { p.withKids = v === 'yes'; document.querySelector('.kids').classList.toggle('hidden', !p.withKids); }
+      else if (g === 'withPet') { p.withPet = v === 'yes'; document.querySelector('.pet-hint').classList.toggle('hidden', !p.withPet); }
       else if (g === 'kidCount') p.kidCount = Number(v);
       else if (g === 'dateMode') {
         p.dateMode = v;
@@ -210,7 +214,7 @@
       E.BUDGETS[p.budget].label, E.DURATIONS[p.duration].label.replace(/ \(.*\)/, ''),
       U.fmtDate(p.date) + ' · ' + E.SLOTS[p.slot].label.toLowerCase(), p.region,
       p.withKids ? 'With kids (' + p.kidAges + ')' : 'Just us'
-    ];
+    ].concat(p.withPet ? ['🐾 With pet'] : []);
     return bits.map((b) => `<span class="pill">${esc(b)}</span>`).join('');
   }
 
@@ -277,7 +281,7 @@
   }
 
   function priceText(a) {
-    if (a.price_min == null && a.price_max == null && a.source_name === 'Eventbrite') return 'Price on Eventbrite';
+    if (a.price_min == null && a.price_max == null) return 'Price on ' + String(a.source_name || 'the listing').replace(/^Idea via /, '');
     if (!a.price_min && !a.price_max) return 'Free';
     return (a.price_min ? '$' + a.price_min : 'Free') + (a.price_max && a.price_max !== a.price_min ? '–$' + a.price_max : '') + ' pp';
   }
@@ -327,6 +331,7 @@
               <span class="meal-meta">${E.BAND_LABEL[r.price_band]} · ${esc(r.cuisines.slice(0, 2).join(', '))} · ~$${o.cost} for ${state.prefs.withKids ? 'all' : 'two'}</span>
               <span class="meal-meta">📍 ${dist} · ${o.mins} min${o.km <= 1 ? ' walk' : ''}${r.dietary.length ? ' · ' + esc(r.dietary.map(dietLabel).join(', ')) : ''}</span>
               ${o.overBudget ? '<span class="meal-meta warn">Over remaining budget</span>' : ''}
+              ${r.pet_friendly ? '<span class="meal-meta pet">🐾 Pet-friendly seating</span>' : state.prefs.withPet ? '<span class="meal-meta">Pets: check with venue</span>' : ''}
               ${r.reservation_required
                 ? `<a class="reserve" href="${esc(E.reserveUrl(r))}" target="_blank" rel="noopener">📞 Reservation recommended: ${r.booking_url ? 'Reserve a table' : 'Find &amp; reserve'} ↗</a>`
                 : '<span class="meal-meta">Walk-in friendly</span>'}
@@ -361,13 +366,14 @@
         <div class="tags">${a.categories.slice(0, 2).map((c) => `<span class="tag">${esc(catById(c).label)}</span>`).join('')}</div>
         <h3>${esc(a.name)}</h3>
         <p class="desc clamp2" title="${esc(a.short_description)}">${esc(a.short_description)}</p>
-        <p class="meta-line">📍 <a href="${esc(U.mapUrl(a))}" target="_blank" rel="noopener">${esc(a.venue)}</a> · ${esc(a.region)}${state.prefs.region !== 'Anywhere' && a.region !== state.prefs.region ? ' <span class="muted">(next to ' + esc(state.prefs.region) + ')</span>' : ''}</p>
+        <p class="meta-line">📍 ${a.approx_location ? 'Location shared on booking <span class="muted">(meal ideas near the city centre)</span>' : `<a href="${esc(U.mapUrl(a))}" target="_blank" rel="noopener">${esc(a.venue)}</a> · ${esc(a.region)}`}${state.prefs.region !== 'Anywhere' && a.region !== state.prefs.region ? ' <span class="muted">(next to ' + esc(state.prefs.region) + ')</span>' : ''}</p>
         <ul class="facts-mini">
           <li>📅 ${dateText(a)}</li>
           <li title="${esc(a.price_note || '')}">💵 ${priceText(a)}</li>
           <li>⏱️ ${U.fmtDuration(a.duration_min)}</li>
           <li>${a.indoor_outdoor === 'indoor' ? '🏠 Indoor' : '🌤️ Outdoor'}</li>
           ${a.kid_friendly ? `<li>👶 Kids${a.kid_age_min ? ' ' + a.kid_age_min + '+' : ''}</li>` : a.source_name === 'Eventbrite' ? '' : '<li>🔞 Adults</li>'}
+          ${a.pet_friendly ? '<li class="pet">🐾 Pet-friendly</li>' : ''}
         </ul>
         ${a.booking_required ? `<a class="book-link" href="${esc(E.bookingUrl(a))}" target="_blank" rel="noopener">🎟️ Booking needed · <span>Book tickets ↗</span></a>` : ''}
         ${mealHTML(it)}
@@ -463,6 +469,22 @@
               ${I.TEMPLATES.map((t) => `<button type="button" role="radio" aria-checked="${d.tpl === t.id}" class="tpl-opt ${d.tpl === t.id ? 'on' : ''}" data-action="tpl" data-tpl="${t.id}" style="--a:${t.accent};--b:${t.bg}"><span class="sw" aria-hidden="true">${t.emoji}</span>${esc(t.name)}</button>`).join('')}
             </div>
           </fieldset>
+          <fieldset class="field"><legend>Your plan <span class="hint">swap anything for something new</span></legend>
+            <ul class="plan-items">
+              ${items.map((it, i) => `<li>
+                <span class="pi-name">${catById(it.activity.categories[0]).emoji} ${esc(it.activity.name)}${it.meal ? `<br><small class="muted">🍽️ ${esc(it.meal.r.name)}</small>` : ''}</span>
+                <button type="button" class="btn tiny" data-action="swap-item" data-i="${i}" aria-label="Swap ${esc(it.activity.name)} for another idea">🔄 Swap</button>
+              </li>`).join('')}
+            </ul>
+            <button type="button" class="btn tiny" data-action="new-plan">🎲 Try a different plan</button>
+          </fieldset>
+          <fieldset class="field"><legend>How much should they know?</legend>
+            <div class="seg seg-sm" role="radiogroup" aria-label="How much to reveal">
+              ${[['full', '📋 Full plan'], ['teaser', '🔍 Teaser'], ['mystery', '🎁 Mystery']].map(([m, l]) => `<button type="button" role="radio" aria-checked="${(d.mode || 'full') === m}" data-action="reveal" data-mode="${m}">${l}</button>`).join('')}
+            </div>
+            <p class="hint">${{ full: 'Shows every place, address and booking link.', teaser: 'Shows quirky clues, the area and the type of activity, but not the actual places.', mystery: 'Just playful clues, times and a dress code. The real places stay a secret.' }[d.mode || 'full']}</p>
+            ${(d.mode || 'full') !== 'full' ? '<button type="button" class="btn tiny" data-action="new-hints">🔀 New hints</button> <span class="hint">You\'ll still see the full plan in My plans.</span>' : ''}
+          </fieldset>
           <div class="two">
             <label class="text-field">Partner's name<input name="to" maxlength="40" value="${esc(d.to)}" placeholder="e.g. Wei Ling"></label>
             <label class="text-field">Your name<input name="from" maxlength="40" value="${esc(d.from)}" placeholder="e.g. Marcus"></label>
@@ -506,8 +528,32 @@
     const d = state.draft;
     return I.build(planItems(), state.prefs, {
       id: d.id, tpl: d.tpl, to: d.to, from: d.from, msg: d.msg.trim(), line: d.line.trim(),
-      starter: d.useStarter ? tip : '', showCost: d.showCost
+      starter: d.useStarter ? tip : '', showCost: d.showCost, mode: d.mode || 'full', hintSeed: d.hintSeed || 0
     });
+  }
+
+  // Variety: other good ideas for the same preferences, used to swap one item or the whole plan.
+  function altCandidates() {
+    const r = E.recommend(state.prefs, { limit: 60 });
+    const inPlan = new Set(state.plan.map((x) => x.id));
+    return r.items.map((i) => i.activity.id).filter((id) => !inPlan.has(id));
+  }
+  function swapPlan(index) {
+    const alts = altCandidates();
+    if (!alts.length) { toast('No other ideas match these preferences. Try widening them.'); return; }
+    state.swapPtr = ((state.swapPtr || 0) + 1) % alts.length;
+    if (index == null) {
+      // Whole new plan with the same number of items.
+      const n = state.plan.length || 1, start = (state.swapPtr * n) % alts.length;
+      const fresh = [];
+      for (let k = 0; k < n && k < alts.length; k++) fresh.push({ id: alts[(start + k) % alts.length] });
+      state.plan = fresh;
+    } else {
+      state.plan[index] = { id: alts[state.swapPtr % alts.length] };
+    }
+    state.draft.link = null; state.draft.hintSeed = (state.draft.hintSeed || 0) + 1;
+    persist(); S.track('plan_swapped');
+    viewInvite();
   }
   function renderPreview(tip) {
     document.getElementById('preview').innerHTML = I.cardHTML(currentInvite(tip));
@@ -525,7 +571,9 @@
     d.link = url; persist();
     // Save to "My plans" (local only).
     const plans = S.get('plans', []).filter((x) => x.id !== inv.id);
-    plans.unshift({ id: inv.id, url, to: inv.to, date: inv.date, title: inv.steps.filter((s) => s.k === 'a').map((s) => s.n).join(' + '), cost: inv.cost, created_at: new Date().toISOString(), rsvp: null, inv });
+    // Keep the full plan for yourself, even when the shared link only carries hints.
+    const full = inv.mode === 'full' ? inv : I.build(planItems(), state.prefs, Object.assign({}, inv, { mode: 'full' }));
+    plans.unshift({ id: inv.id, url, to: inv.to, date: inv.date, mode: inv.mode, title: (inv.mode !== 'full' ? '🎁 ' : '') + full.steps.filter((s) => s.k === 'a').map((s) => s.n).join(' + '), cost: inv.cost, created_at: new Date().toISOString(), rsvp: null, inv: full });
     S.set('plans', plans.slice(0, 50));
     S.track('invite_created');
     const text = I.shareText(inv, url);
@@ -705,6 +753,10 @@
         state.draft.tpl = el.dataset.tpl; state.draft.link = null; persist();
         document.querySelectorAll('.tpl-opt').forEach((b) => { const on = b.dataset.tpl === state.draft.tpl; b.classList.toggle('on', on); b.setAttribute('aria-checked', String(on)); });
         renderPreview(viewInvite._tip); document.getElementById('share-panel').innerHTML = ''; break;
+      case 'reveal': state.draft.mode = el.dataset.mode; state.draft.link = null; persist(); viewInvite(); break;
+      case 'new-hints': state.draft.hintSeed = (state.draft.hintSeed || 0) + 1; state.draft.link = null; persist(); renderPreview(viewInvite._tip); document.getElementById('share-panel').innerHTML = ''; break;
+      case 'swap-item': swapPlan(Number(el.dataset.i)); break;
+      case 'new-plan': swapPlan(null); break;
       case 'suggest': {
         const d = state.draft; d.lineN = (d.lineN || 0) + 1;
         d.line = I.suggestLine(d.tpl, d.to, state.prefs.date, d.lineN);

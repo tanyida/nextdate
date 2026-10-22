@@ -45,6 +45,39 @@ sw.js, manifest.webmanifest, icon.svg  PWA (installable, offline shell)
 serve.ps1                   zero-install local server
 ```
 
+## Surprise invitations, free dates and more ideas
+
+- **"How much should they know?"** The invitation builder has three levels:
+  - **📋 Full plan:** places, addresses and booking links.
+  - **🔍 Teaser:** quirky clues, the area and the type of activity.
+  - **🎁 Mystery:** just clues, times and a dress code.
+
+  "🔀 New hints" rewrites the clues. In teaser and mystery modes the shared link carries **no venue names, addresses or links**, so peeking at the URL can't spoil the surprise. The sender keeps the full plan in My plans, marked 🎁. The image and the `.ics` calendar file follow the same mode ("🎁 Mystery date with Marcus").
+- **Variety:** "🔄 Swap" replaces one plan item, and "🎲 Try a different plan" replaces the whole plan, with other good matches for the same preferences.
+- **Free budget:** "Free" is the first budget option. It only returns ideas that are genuinely $0 (unknown-price listings are left out) and pairs them with the cheapest food nearby.
+- **No branding on the invite:** "Planned with Next Date" was removed from the card and the image.
+- **45 more ideas (`js/activities-curated.js`):**
+  - **TheSmartLocal's free date ideas:** Mandai Boardwalk, Sentosa Sensoryscape, Keppel Coastal Trail, Bidadari Park, Chinese & Japanese Gardens, Tampines Boulevard Park, the Hyundai Discovery Tour, the National Museum, Marina One, Seletar Rocket Tower, Changi Beach, Canterbury Road, Japanese Cemetery Park, T3 free movies.
+  - **SingCupid's activities:** Tiong Bahru café crawl, Marina Bay loop, Tampines Eco Green, Punggol kayaking, Serangoon Gardens supper, Yishun Dam, Springleaf prata, Gillman Barracks, library@orchard, a hawker challenge, a cat café.
+  - **20 Seek Sophie experiences:** perfume, watchmaking, silversmithing, moss lamp, leathercraft, bonsai, magic bar, pizza, kintsugi, gin distillery, dining in the dark, tingkat painting, cocktails, sake, Ubin kayaking, chocolate, pasta, memory box, haunted Changi walk, night kayak fishing. They have Seek Sophie's own photos and link to each listing.
+  - **Sourcing:** only facts were taken, descriptions are our own, and each card credits the article.
+  - **Seek Sophie caveats:** most hosts share the address after booking, so these cards say "Location shared on booking" and suggest meals near the city centre. Prices show as "Price on Seek Sophie".
+  - **Before launch:** verify each entry, and get permission for the Seek Sophie photos.
+
+## Pets, more ideas and GetYourGuide
+
+- **Pet-friendly filter:** "Plan a date" has a "Bringing a pet?" option.
+  - With a pet, only places that welcome leashed pets are suggested: parks, coastal walks, heritage streets and dog-friendly cafés. Nature reserves, attractions and food centres usually don't allow pets.
+  - Pet-friendly restaurants are ranked first in the meal picker.
+  - Cards show a 🐾 badge, and the Latest events calendar respects the filter too.
+  - Flags live in `pet_friendly` (editable in the console). Venue rules change, so confirm them before launch.
+- **More evergreen ideas:** 24 new ones, including Bishan-Ang Mo Kio Park, HortPark, Labrador Park, the Cable Car, the Singapore Flyer, Marina Barrage, the Asian Civilisations Museum, Telok Ayer, the Bukit Timah summit, Kent Ridge, the Skyline Luge, indoor skydiving, Bird Paradise, River Wonders, Sungei Buloh, Lorong Halus, Changi Jurassic Mile, Bedok Jetty, Chestnut Nature Park, plus escape rooms, paint & sip, stand-up comedy, couples' yoga and a dog-friendly café brunch. With the GetYourGuide activities, there are now 91 evergreen ideas.
+- **GetYourGuide (`js/activities-gyg.js`):** 14 Singapore activities from getyourguide.com/singapore-l170 (river and night cruises, Gardens by the Bay tours, food tours, heritage walks, bike tour, couples' photoshoot, SkyPark, Universal Studios).
+  - Each has the GetYourGuide photo, a "from" price converted from USD at about 1.30, the rating, and a booking link to the GetYourGuide listing.
+  - Day trips outside Singapore are left out.
+  - GetYourGuide blocks automated scripts, so this list was collected once in a browser. Refresh it by hand, or use GetYourGuide's partner API.
+  - Get permission (or join their partner programme) before a public launch.
+
 ## Photos from official websites
 
 - **Gifts and venues:** `fetch-photos.ps1` collects each brand's or venue's own sharing photo (its `og:image`) from the official site and saves it to `js/photos-official.js`. Logos are skipped. For Shopify shops it uses a matching product photo from the shop's public product feed. Re-run it any time:

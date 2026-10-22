@@ -228,20 +228,21 @@ PL.store = {
     // Content saved by editors before newer fields existed: fill those fields from the seed.
     const fill = (list, seed, keys) => list.map((x) => {
       const s = seed.find((y) => y.id === x.id);
-      keys.forEach((k) => { if (x[k] === undefined) x[k] = s ? s[k] : (k === 'reservation_required' ? false : ''); });
+      keys.forEach((k) => { if (x[k] === undefined) x[k] = s ? s[k] : (['reservation_required', 'beef_focused', 'pet_friendly'].includes(k) ? false : ''); });
       return x;
     });
-    let activities = saved && saved.activities ? fill(saved.activities, PL.SEED_ACTIVITIES, ['photo', 'photo_kind', 'image_url', 'booking_url']) : PL.SEED_ACTIVITIES;
+    let activities = saved && saved.activities ? fill(saved.activities, PL.SEED_ACTIVITIES, ['photo', 'photo_kind', 'image_url', 'booking_url', 'pet_friendly']) : PL.SEED_ACTIVITIES;
+    // Imported pools (Eventbrite events, GetYourGuide, curated ideas) join unless an editor already has them.
+    [PL.EVENTBRITE_EVENTS, PL.GYG_ACTIVITIES, PL.CURATED_ACTIVITIES].forEach((pool) => {
+      if (!pool || !pool.length) return;
+      const have = new Set(activities.map((a) => a.id));
+      activities = activities.concat(pool.filter((e) => !have.has(e.id)));
+    });
     // Official venue photos (js/photos-official.js), unless an editor set their own image.
     if (PL.OFFICIAL_PHOTOS) activities.forEach((a) => PL.applyOfficialPhoto(a));
-    // Imported Eventbrite events (js/events-eventbrite.js) join the pool unless an editor already has them.
-    if (PL.EVENTBRITE_EVENTS && PL.EVENTBRITE_EVENTS.length) {
-      const have = new Set(activities.map((a) => a.id));
-      activities = activities.concat(PL.EVENTBRITE_EVENTS.filter((e) => !have.has(e.id)));
-    }
     return {
       activities,
-      restaurants: saved && saved.restaurants ? fill(saved.restaurants, PL.SEED_RESTAURANTS, ['photo', 'photo_kind', 'image_url', 'reservation_required', 'beef_focused']) : PL.SEED_RESTAURANTS,
+      restaurants: saved && saved.restaurants ? fill(saved.restaurants, PL.SEED_RESTAURANTS, ['photo', 'photo_kind', 'image_url', 'reservation_required', 'beef_focused', 'pet_friendly']) : PL.SEED_RESTAURANTS,
       tips: (saved && saved.tips) || PL.SEED_TIPS,
       updated_at: saved && saved.updated_at
     };

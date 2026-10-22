@@ -54,8 +54,9 @@ button, input, textarea { font: inherit; color: inherit; }
 .topbar nav a { color: var(--ink); font-weight: 500; text-decoration: none; padding: 10px 4px; }
 main { max-width: 760px; margin: 0 auto; padding: 0 16px 24px; outline: none; }
 .foot { max-width: 760px; margin: 0 auto; padding: 24px 16px 140px; font-size: .8rem; color: var(--muted); border-top: 1px solid var(--line); }
-/* Invitation builder and the partner's invitation page stay clean: no footer. */
-body[data-route="invite"] .foot, body[data-route="i"] .foot { display: none; }
+body[data-route="i"] .foot, body[data-route="invite"] .foot { padding-bottom: 32px; }
+.foot { text-align: center; }
+.facts-mini li.pet, .meal-meta.pet { color: var(--ok); font-weight: 600; }
 
 .boot-msg { padding: 48px 0; text-align: center; color: var(--muted); }
 .boot-msg h1 { font: 700 1.5rem var(--display); color: var(--ink); }
@@ -475,6 +476,14 @@ details.meals .meal-body { padding: 8px 10px 10px; font-size: .9rem; }
   .cal-ev { grid-template-columns: 110px minmax(0, 1fr); }
 }
 
+/* Invitation builder: plan items & hint invitations */
+.plan-items { list-style: none; padding: 0; margin: 0 0 10px; display: grid; gap: 8px; }
+.plan-items li { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--surface-2); border-radius: 12px; padding: 8px 10px; }
+.plan-items .pi-name { font-size: .9rem; font-weight: 600; min-width: 0; }
+.plan-items small { font-weight: 400; }
+.inv-surprise { font-weight: 700; color: var(--i-ac); margin: 0 0 6px; }
+.inv-step.is-hint strong { font-size: 1rem; }
+.inv-clue-n { display: block; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--i-ac); }
 /* Print = "Save as PDF" of the invitation only. */
 @media print {
   body { background: #fff; }
