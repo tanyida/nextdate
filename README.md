@@ -45,6 +45,27 @@ sw.js, manifest.webmanifest, icon.svg  PWA (installable, offline shell)
 serve.ps1                   zero-install local server
 ```
 
+## Daily event updates (GitHub Actions)
+
+`.github/workflows/daily-events.yml` runs **every day at 06:00 Singapore time**:
+1. **Fetch events:** `ingest-eventbrite.ps1` reads Eventbrite's Singapore listings for this weekend, this week, next week and next month (4 pages each, 3 seconds apart).
+2. **Refresh photos:** on Mondays it also runs `fetch-photos.ps1`.
+3. **Publish:** if anything changed, it commits `js/events-eventbrite.js` / `js/photos-official.js`. Vercel redeploys automatically on that commit.
+
+**Built-in safety:**
+- **Merging:** events seen in the last 7 days are kept until they end, even if today's listing pages don't show them.
+- **Expiry:** ended events disappear automatically, both in the file and at display time in the app.
+- **Failures:** if Eventbrite can't be reached, or its page layout changes, the run fails without touching the existing file. GitHub emails the repo owner about the failed run, and the site keeps the last good data.
+- **Photos:** if a brand site is temporarily down, previously found photos are kept.
+
+**Running it yourself:**
+- **On GitHub:** go to the repo's **Actions** tab → *Daily events refresh* → **Run workflow** (tick "Also refresh official photos" if wanted).
+- **Locally:** `powershell -ExecutionPolicy Bypass -File ingest-eventbrite.ps1`
+
+**Not updated automatically:**
+- **GetYourGuide (`js/activities-gyg.js`):** its bot protection blocks automated fetching. Refresh it by hand, or switch to their partner API, which would allow a daily job.
+- **The curated article ideas (`js/activities-curated.js`):** these are evergreen and don't need daily updates.
+
 ## Surprise invitations, free dates and more ideas
 
 - **"How much should they know?"** The invitation builder has three levels:
