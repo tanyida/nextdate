@@ -1,1 +1,52 @@
+# Next Date: refresh the events pulled from the web every day.
+# Runs ingest-eventbrite.ps1 daily (and fetch-photos.ps1 weekly), commits any changes, and the
+# commit triggers a new Vercel deployment automatically. Run it by hand from the repo's Actions tab
+# with "Run workflow".
+name: Daily events refresh
 
+on:
+  schedule:
+    - cron: '0 22 * * *'    # every day 06:00 Singapore time (22:00 UTC the day before)
+    - cron: '30 22 * * 0'   # Mondays 06:30 Singapore time: also refresh official photos
+  workflow_dispatch:
+    inputs:
+      photos:
+        description: 'Also refresh official photos'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write           # needed to commit the refreshed data files
+
+concurrency:
+  group: daily-events
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch latest Eventbrite events
+        shell: pwsh
+        run: ./ingest-eventbrite.ps1 -PagesPerUrl 4 -DelaySeconds 3
+
+      - name: Refresh official photos (weekly)
+        if: github.event.schedule == '30 22 * * 0' || inputs.photos == true
+        shell: pwsh
+        continue-on-error: true   # a photo hiccup shouldn't block the events update
+        run: ./fetch-photos.ps1
+
+      - name: Commit changes (triggers Vercel deploy)
+        run: |
+          git config user.name "next-date-bot"
+          git config user.email "next-date-bot@users.noreply.github.com"
+          git add js/events-eventbrite.js js/photos-official.js
+          if git diff --cached --quiet; then
+            echo "No changes today."
+          else
+            git commit -m "Daily events refresh $(TZ=Asia/Singapore date +%Y-%m-%d)"
+            git push
+          fi
